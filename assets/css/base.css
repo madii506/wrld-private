@@ -1,0 +1,48 @@
+@font-face{font-family:Pix;src:url(/assets/fonts/pix.ttf) format('truetype');font-weight:400 700;font-display:swap}
+@font-face{font-family:Text;src:url(/assets/fonts/text.otf);font-display:swap}
+@font-face{font-family:Disp;src:url(/assets/fonts/disp.otf);font-display:swap}
+@font-face{font-family:Mono;src:url(/assets/fonts/mono.ttf);font-display:swap}
+:root{--bg:#05070d;--ink:#e9eef8;--mute:#8d97ad;--dim:#5b6478;--line:rgba(233,238,248,.09);--line2:rgba(233,238,248,.16);--gold:#f4b740;--gold2:#ffd680;--teal:#3ff0d8;--teal2:#9ff8ec;--panel:rgba(7,11,20,.78);--panel2:rgba(10,15,27,.9);--red:#ff6a5a;--green:#45e39a}
+*{box-sizing:border-box;scrollbar-width:none}
+*::-webkit-scrollbar{display:none}
+html{overflow-x:hidden;background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 Text,system-ui,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:clip}
+.pix{font-family:Pix,monospace;font-weight:600;letter-spacing:.01em}
+.mono{font-family:Mono,ui-monospace,monospace}
+a{color:inherit}
+button{font:inherit;color:inherit;cursor:pointer}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:0 22px;border-radius:12px;border:1px solid var(--line2);background:rgba(255,255,255,.04);font:600 15px Disp,Text,system-ui,sans-serif;letter-spacing:-.005em;text-decoration:none;transition:transform .18s,background .18s,border-color .18s,box-shadow .18s}
+.btn:hover{transform:translateY(-1px);border-color:rgba(255,255,255,.3)}
+.btn.gold{background:var(--gold);color:#1a1204;border-color:var(--gold);box-shadow:0 0 0 0 rgba(244,183,64,.4)}
+.btn.gold:hover{background:var(--gold2);box-shadow:0 6px 30px -6px rgba(244,183,64,.55)}
+.btn.ghost{background:rgba(5,7,13,.55)}
+.btn.sm{min-height:38px;padding:0 14px;font-size:13px;border-radius:10px}
+.btn.lg{min-height:56px;padding:0 34px;font-size:18px}
+.btn[disabled]{opacity:.45;cursor:not-allowed;transform:none}
+.chip{display:inline-flex;align-items:center;gap:8px;min-height:38px;padding:0 14px;border-radius:999px;border:1px solid var(--line2);background:rgba(5,7,13,.6);font:600 13px Disp,Text,sans-serif}
+.chip .dot{width:8px;height:8px;border-radius:50%;background:var(--dim)}
+.chip.on .dot{background:var(--teal);box-shadow:0 0 10px var(--teal)}
+.chip img{width:18px;height:18px;border-radius:4px}
+.menuwrap{position:relative}
+.wmenu{position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%) translateY(-4px);min-width:250px;padding:8px;border-radius:14px;background:var(--panel2);border:1px solid var(--line2);box-shadow:0 20px 60px rgba(0,0,0,.6);opacity:0;pointer-events:none;transition:opacity .16s,transform .16s;z-index:60;text-align:left}
+.wmenu.right{left:auto;right:0;transform:translateY(-4px)}
+.wmenu.open{opacity:1;pointer-events:auto;transform:translateX(-50%) translateY(0)}
+.wmenu.right.open{transform:none}
+.wmenu .h{font:11px Mono,monospace;color:var(--mute);padding:6px 10px 8px;letter-spacing:.08em;text-transform:uppercase}
+.wmenu button,.wmenu a{display:flex;width:100%;align-items:center;gap:10px;min-height:44px;padding:0 10px;border:0;background:none;border-radius:10px;text-decoration:none;font:14px Text,sans-serif;text-align:left}
+.wmenu button:hover,.wmenu a:hover{background:rgba(255,255,255,.06)}
+.wmenu .ic{width:22px;height:22px;border-radius:6px;display:grid;place-items:center;font:700 12px Pix;background:#1b2234;flex:none}
+.wmenu .ic img{width:22px;height:22px;border-radius:6px}
+.wmenu .tag{margin-left:auto;font:11px Mono;color:var(--mute)}
+.wmenu .addr{font:12px Mono;color:var(--mute);padding:4px 10px 8px;word-break:break-all}
+.sr{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@media (prefers-reduced-motion:reduce){*{transition-duration:.01ms!important;animation-duration:.01ms!important}}
+#wipe{position:fixed;inset:0;z-index:95;display:grid;pointer-events:none}
+#wipe i{background:#05070d;transform:scale(0);transition:transform .34s cubic-bezier(.6,0,.4,1)}
+#wipe.on i{transform:scale(1.02)}
+
+.spot{position:relative;overflow:hidden}
+.spot::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .3s;background:radial-gradient(260px circle at var(--mx,50%) var(--my,50%),rgba(63,240,216,.13),transparent 60%)}
+.spot:hover::after{opacity:1}
+#trail{position:fixed;inset:0;z-index:70;pointer-events:none}
+@media (max-width:900px){.chip{min-height:44px}}
