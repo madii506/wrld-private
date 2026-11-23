@@ -11,7 +11,7 @@ const { chromium } = require('playwright');
   await p.keyboard.press('Escape');
   await p.click('#gEnter'); await p.waitForTimeout(600);
   log.push('entered: ' + await p.evaluate(() => document.body.classList.contains('in')));
-  if (!mob) for (const href of ['#markets', '#descend', '#hidden', '#scan', '#status', '#faq']) {
+  if (!mob) for (const href of ['#markets', '#descend', '#ringlive', '#hidden', '#scan', '#status', '#faq']) {
     await p.click(`#nav .links a[href="${href}"]`); await p.waitForTimeout(500);
     const ok = await p.evaluate(h => { const r = document.querySelector(h).getBoundingClientRect(); return r.top < innerHeight && r.bottom > 0; }, href);
     log.push(`nav ${href}: ${ok ? 'ok' : 'NOT IN VIEW'}`);
