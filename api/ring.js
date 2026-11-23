@@ -11,8 +11,9 @@ module.exports = async (req, res) => {
     const within = sec => ok.filter(s => s.blockTime && now - s.blockTime < sec).length;
     const oldest = sigs.length ? sigs[sigs.length - 1].blockTime : null;
     cache = {
-      program: RING, hour: within(3600), day: within(86400),
-      capped: sigs.length >= 1000 && oldest != null && now - oldest < 86400,      // the day count hit the 1,000 read limit
+      program: RING, hour: within(3600),
+      capped: sigs.length >= 1000 && oldest != null && now - oldest < 86400,      // more than the 1,000 a single read returns
+      day: sigs.length >= 1000 && oldest != null && now - oldest < 86400 ? 1000 : within(86400),
       last: ok.slice(0, 6).map(s => ({ sig: s.signature, t: s.blockTime, slot: s.slot })),
       at: Date.now(),
     };
