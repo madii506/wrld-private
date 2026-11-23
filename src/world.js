@@ -442,8 +442,8 @@ export function startWorld(canvas, opts = {}) {
     const orbiting = shot === 'gate' && !ext;
     if (orbiting) {
       // the gate: circle the whole world slowly, coming in from far away while it assembles
-      const a = -0.42 + t * 0.045, R = (portrait ? 64 : 52) + 30 * Math.exp(-t * 0.42), h = 6.5 + Math.sin(t * 0.13) * 2.2 + 8 * Math.exp(-t * 0.42);
-      tPos.set(Math.sin(a) * R, h, -6 + Math.cos(a) * R); tLook.set(0, portrait ? -7.5 : -6.2, -6);
+      const a = -0.42 + t * 0.045, R = (portrait ? 64 : 66) + 30 * Math.exp(-t * 0.42), h = 6.5 + Math.sin(t * 0.13) * 2.2 + 8 * Math.exp(-t * 0.42);
+      tPos.set(Math.sin(a) * R, h, -6 + Math.cos(a) * R); tLook.set(0, portrait ? -4.4 : -3.6, -6);
     } else if (portrait) tPos.sub(tLook).multiplyScalar(1.45).add(tLook);
     tPos.x += ptr.x * 2.0; tPos.y -= ptr.y * 1.2 * (Math.cos(camRoll * Math.PI / 180) >= 0 ? 1 : -1);
     if (fly) {
