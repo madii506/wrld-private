@@ -1,13 +1,12 @@
 // The WRLD world. A floating slab of the world's markets: the public city on top, a hidden pool cut into its face,
 // and the same city hanging upside down underneath it, lit teal: the private side. Other market cities float around
-// at odd angles, wired to the pool by dotted lines. The gate is the blindfolded globe from the PFP; Enter unties it
-// and dives through.
+// at odd angles wearing live prices, wired to the pool by dotted lines. On load the whole world assembles voxel by
+// voxel while the camera circles it; Enter sweeps down into the city.
 import * as THREE from 'three';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
-import { LAND_W, LAND_H, LAND_B64 } from './landmask.js';
 
 export function startWorld(canvas, opts = {}) {
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -215,117 +214,122 @@ export function startWorld(canvas, opts = {}) {
   isle(new THREE.Vector3(6, 22, -60), [0, 0, 0.1], 16, 8, 0.5, (o, v) => { tower(-4, -2, 1, 12, -2, 0, 'window', 0xffc47a, 0.6, 0x141c2c, o, v); tower(1, 3, 1, 8, -1, 1, 'window', 0xffc47a, 0.6, 0x141c2c, o, v); });
   isle(new THREE.Vector3(-8, -26, -40), [0, 0.6, Math.PI], 14, 8, 0.5, (o, v) => { pagoda(0, 0, 3, o, v); tower(3, 5, 1, 10, -1, 1, 'windowC', 0xd6e8ff, 0.55, 0x172032, o, v); });
 
-  // ---------- gate: the blindfolded globe, alive. It turns, its night side lights up city by city, trades orbit it,
-  // little market islands drift round it, the blindfold's tails flutter, and it leans toward the pointer. ----------
-  const G = new THREE.Vector3(0, 46, -30), GR = 4.2, gs = GR / 15;
-  const gate = new THREE.Group(); gate.position.copy(G); scene.add(gate);
-  const globe = new THREE.Group(); gate.add(globe);
-  const blind = new THREE.Group(); gate.add(blind);
-  const SUNP = new THREE.Vector3(-18, 6, 2.5);                        // the globe's own sun, relative to G
-  const sunDir = SUNP.clone().normalize();
-  { const l = new THREE.PointLight(0xfff0d8, 210, 70, 1.1); l.position.copy(G).add(SUNP); scene.add(l); }
-  { const l = new THREE.PointLight(0x3ff0d8, 30, 26, 1.4); l.position.copy(G).add(new THREE.Vector3(12, -6, 6)); scene.add(l); }
-  const boxG = new THREE.BoxGeometry(1, 1, 1);
-  const cityL = [], tailB = [];
-  let cityMesh, tailMesh;
-  {
-    const bits = Uint8Array.from(atob(LAND_B64), ch => ch.charCodeAt(0));
-    const land = (lat, lon) => { const x = ((Math.floor((lon + 180) / 360 * LAND_W) % LAND_W) + LAND_W) % LAND_W, y = Math.min(LAND_H - 1, Math.max(0, Math.floor((90 - lat) / 180 * LAND_H))); const n = y * LAND_W + x; return (bits[n >> 3] >> (7 - (n & 7))) & 1; };
-    const gl = [], bl = [];
-    for (let x = -16; x <= 16; x++) for (let y = -16; y <= 16; y++) for (let z = -16; z <= 16; z++) {
-      const r = Math.hypot(x, y, z); if (r > 15.5 || r < 13.8) continue;
-      const lat = Math.asin(y / r) * 180 / Math.PI, lon = Math.atan2(x, z) * 180 / Math.PI - 20;
-      const isL = land(lat, lon), ice = Math.abs(lat) > 70;
-      gl.push([x * gs, y * gs, z * gs, ice ? 0xcfe9ea : isL ? (r > 15 ? 0x34a48f : 0x2e9684) : 0x145668]);
-      if (isL && !ice && r > 14.9 && Math.abs(lat) < 62 && rnd() < 0.3) cityL.push({ p: new THREE.Vector3(x, y, z).multiplyScalar(gs * 1.045), n: new THREE.Vector3(x, y, z).normalize(), ph: rnd() * 6.28, s: gs * (0.32 + rnd() * 0.3) });
-    }
-    const tilt = -0.21, ca = Math.cos(tilt), sa = Math.sin(tilt), BR = GR * 1.07;
-    for (let a = 0; a < 220; a++) {
-      const th = a / 220 * Math.PI * 2;
-      for (let w = -3; w <= 3; w++) { const px = Math.cos(th) * BR, pz = Math.sin(th) * BR, py = w * gs * 0.95; bl.push([px * ca - py * sa, px * sa + py * ca, pz, w >= 2 ? 0xffd680 : w <= -2 ? 0xb87c1e : 0xf4b740]); }
-    }
-    const kx = BR * ca, ky = BR * sa;
-    for (let x = -2; x <= 2; x++) for (let y = -2; y <= 2; y++) for (let z = -1; z <= 1; z++) if (x * x + y * y < 6) bl.push([kx + 0.15 + x * gs, ky + y * gs, 0.6 + z * gs, 0xf4b740]);
-    for (let t = 0; t < 16; t++) for (const dx of [0, gs]) tailB.push({ b: new THREE.Vector3(kx + 0.3 + t * gs * 0.5 + dx, ky - t * gs * 0.95, 0.7), k: t / 16, ph: 0, c: 0xb87c1e });
-    for (let t = 0; t < 11; t++) for (const dy of [0, gs]) tailB.push({ b: new THREE.Vector3(kx + 0.6 + t * gs * 0.8, ky - 0.2 - t * gs * 0.6 + dy, 0.5), k: t / 11, ph: 1.7, c: 0xc98a2a });
-    const mk = (list, mat, parent) => { const m = new THREE.InstancedMesh(boxG, mat, list.length); const o = new THREE.Object3D(), col = new THREE.Color(); list.forEach(([x, y, z, hex], i) => { o.position.set(x, y, z); o.scale.setScalar(gs * 0.98); o.updateMatrix(); m.setMatrixAt(i, o.matrix); col.set(hex); const j = 1 + (rnd() - 0.5) * 0.1; m.setColorAt(i, col.setRGB(col.r * j, col.g * j, col.b * j)); }); parent.add(m); return m; };
-    // day and night: the half facing away from its sun drops to a dark blue, and only the cities stay lit
-    const gMat = new THREE.MeshStandardMaterial({ roughness: 0.8, flatShading: true });
-    gMat.onBeforeCompile = sh => {
-      sh.uniforms.uGC = { value: G }; sh.uniforms.uSun = { value: G.clone().add(SUNP) };
-      sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vGW;')
-        .replace('#include <project_vertex>', '#include <project_vertex>\n vec4 gw = vec4(transformed, 1.0);\n #ifdef USE_INSTANCING\n gw = instanceMatrix * gw;\n #endif\n vGW = (modelMatrix * gw).xyz;');
-      sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying vec3 vGW; uniform vec3 uGC; uniform vec3 uSun;')
-        .replace('#include <opaque_fragment>', '#include <opaque_fragment>\n float dayK = smoothstep(-0.22, 0.3, dot(normalize(vGW - uGC), normalize(uSun - uGC)));\n gl_FragColor.rgb *= mix(vec3(0.07, 0.1, 0.2), vec3(1.0), dayK);');
+  // ---------- the world assembles: every voxel falls (or, below the slab, rises) into place on load ----------
+  // and the lit materials live: windows switch on and off, tickers run, beacons blink, lamps breathe
+  const UB = { value: reduce ? 2 : 0 }, UT = { value: 0 };
+  const FX = { window: 1, windowC: 1, windowM: 1, windowCM: 1, ticker: 2, tickerW: 2, tickerM: 2, beacon: 3, beaconM: 3, lamp: 4, lampM: 4 };
+  const fxCode = {
+    1: 'totalEmissiveRadiance *= mix(0.1, 1.0, step(0.17, fract(sin(dot(vIP.xy + floor(uT * 0.085 + h * 7.0), vec2(41.3, 17.9))) * 9123.17))) * (0.95 + 0.05 * sin(uT * 6.0 + h * 40.0));',
+    2: 'totalEmissiveRadiance *= 0.25 + 0.75 * step(0.42, fract((vIP.x + vIP.z) * 0.9 - uT * 1.4));',
+    3: 'totalEmissiveRadiance *= 0.08 + 0.92 * step(0.62, fract(uT * 0.8 + h));',
+    4: 'totalEmissiveRadiance *= 0.86 + 0.14 * sin(uT * 11.0 + h * 50.0);',
+  };
+  for (const [key, g] of groups) {
+    const fx = FX[key] || 0;
+    g.mat.onBeforeCompile = sh => {
+      sh.uniforms.uBuild = UB; sh.uniforms.uT = UT;
+      sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nuniform float uBuild; uniform float uT; varying vec3 vIP;')
+        .replace('#include <project_vertex>', `
+          vec4 mvPosition = vec4( transformed, 1.0 );
+          vec3 ip = vec3(0.0);
+          #ifdef USE_INSTANCING
+            ip = instanceMatrix[3].xyz;
+          #endif
+          vIP = ip;
+          float hb = fract(sin(dot(ip, vec3(12.9898, 78.233, 37.719))) * 43758.5453);
+          float dl = clamp(length(ip.xz - vec2(0.0, -1.0)) / 40.0, 0.0, 1.0) * 0.6 + hb * 0.28;
+          float tb = clamp((uBuild - dl) / 0.42, 0.0, 1.0);
+          float eb = 1.0 - pow(1.0 - tb, 3.0);
+          mvPosition.xyz *= max(eb, 0.0001);
+          #ifdef USE_INSTANCING
+            mvPosition = instanceMatrix * mvPosition;
+          #endif
+          float side = ip.y < ${YM.toFixed(3)} ? -1.0 : 1.0;
+          mvPosition.y += (1.0 - eb) * side * (5.0 + hb * 12.0);
+          mvPosition.xz += (1.0 - eb) * (vec2(hb, fract(hb * 7.31)) - 0.5) * 7.0;
+          mvPosition = modelViewMatrix * mvPosition;
+          gl_Position = projectionMatrix * mvPosition;`);
+      if (fx) sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform float uT; varying vec3 vIP;')
+        .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
+          { float h = fract(sin(dot(vIP, vec3(12.9898, 78.233, 37.719))) * 43758.5453); ${fxCode[fx]} }`);
     };
-    mk(gl, gMat, globe);
-    const bandMat = new THREE.MeshStandardMaterial({ roughness: 0.4, metalness: 0.35, emissive: 0x6a4000, emissiveIntensity: 0.35, flatShading: true, transparent: true });
-    mk(bl, bandMat, blind); blind.userData.mat = bandMat;
-    tailMesh = new THREE.InstancedMesh(boxG, bandMat, tailB.length); tailB.forEach((d, i) => tailMesh.setColorAt(i, new THREE.Color(d.c))); blind.add(tailMesh);
-    cityMesh = new THREE.InstancedMesh(boxG, new THREE.MeshBasicMaterial({ color: 0xffffff }), cityL.length); globe.add(cityMesh);
   }
-  const haloMat = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.BackSide, uniforms: { uT: { value: 0 } },
-    vertexShader: 'varying vec3 n; varying vec3 vv; void main(){ vec4 mv = modelViewMatrix*vec4(position,1.); n = normalize(normalMatrix*normal); vv = normalize(-mv.xyz); gl_Position = projectionMatrix*mv; }',
-    fragmentShader: 'uniform float uT; varying vec3 n; varying vec3 vv; void main(){ float f = pow(max(0., .62 + dot(n, vv)), 3.); float p = .82 + .18*sin(uT*1.3); gl_FragColor = vec4(vec3(.3,.95,.85)*f*.95*p, 1.); }' });
-  gate.add(new THREE.Mesh(new THREE.SphereGeometry(GR * 1.25, 48, 32), haloMat));
-  // trades in orbit: gold ones in the open, teal ones on the private side, white sparks between
-  const RINGS = [{ R: 6.1, inc: 0.42, node: 0.3, sp: 0.34, n: 64, col: 0xf4b740 }, { R: 7.0, inc: -0.62, node: 1.5, sp: -0.24, n: 58, col: 0x3ff0d8 }, { R: 8.1, inc: 0.16, node: 2.7, sp: 0.16, n: 44, col: 0xe8f0ff }];
-  const orbP = []; RINGS.forEach((rg, ri) => { const q = new THREE.Quaternion().setFromEuler(new THREE.Euler(rg.inc, rg.node, 0)); for (let i = 0; i < rg.n; i++) { const train = Math.floor(i / 8); orbP.push({ q, R: rg.R + (rnd() - 0.5) * 0.25, a0: train * 0.9 + (i % 8) * 0.06 + rnd() * 0.02, sp: rg.sp, s: 0.07 + rnd() * 0.1, col: rg.col }); } });
-  // each orbit is drawn as a dotted track so the trains read as traffic, not debris
-  RINGS.forEach(rg => { const q = new THREE.Quaternion().setFromEuler(new THREE.Euler(rg.inc, rg.node, 0)); const pts = []; for (let i = 0; i < 260; i++) { const a = i / 260 * Math.PI * 2; pts.push(new THREE.Vector3(Math.cos(a) * rg.R, 0, Math.sin(a) * rg.R).applyQuaternion(q)); }
-    gate.add(new THREE.Points(new THREE.BufferGeometry().setFromPoints(pts), new THREE.PointsMaterial({ color: rg.col, size: 2, sizeAttenuation: false, transparent: true, opacity: 0.32, depthWrite: false }))); });
-  const orbits = new THREE.InstancedMesh(boxG, new THREE.MeshBasicMaterial({ color: 0xffffff }), orbP.length); orbP.forEach((d, i) => orbits.setColorAt(i, new THREE.Color(d.col).multiplyScalar(1.5))); gate.add(orbits);
-  // small market islands drifting round the globe
-  const islets = [];
-  for (let n = 0; n < 6; n++) {
-    const g = new THREE.Group(), v = 0.22, top = [], win = [];
-    for (let i = -3; i <= 3; i++) for (let k = -2; k <= 2; k++) { if (Math.abs(i) === 3 && Math.abs(k) === 2) continue; top.push([i * v, 0, k * v, (i + k) & 1 ? 0x5c6374 : 0x666e80]); const dd = 1 + Math.max(0, 2 - Math.abs(i) * 0.6 - Math.abs(k) * 0.6) + (rnd() < 0.4 ? 1 : 0); for (let j = 1; j <= dd; j++) top.push([i * v, -j * v, k * v, ROCK[(i + j + 9) % 3]]); }
-    const hs = [3 + Math.floor(rnd() * 5), 2 + Math.floor(rnd() * 3)];
-    [[-1, 0], [1, 1]].forEach(([bi, bk], b) => { for (let j = 1; j <= hs[b]; j++) { const lit = j % 2 === 0 && rnd() < 0.8; (lit ? win : top).push([bi * v, j * v, bk * v, lit ? (n % 2 ? 0x53f5dd : 0xffc47a) : 0x1a2436]); } });
-    const m1 = new THREE.InstancedMesh(boxG, new THREE.MeshStandardMaterial({ roughness: 0.9, flatShading: true }), top.length), m2 = new THREE.InstancedMesh(boxG, new THREE.MeshBasicMaterial({ color: 0xffffff }), Math.max(1, win.length));
-    const o = new THREE.Object3D(), c = new THREE.Color();
-    top.forEach(([x, y, z, h], i) => { o.position.set(x, y, z); o.scale.setScalar(v * 0.97); o.updateMatrix(); m1.setMatrixAt(i, o.matrix); m1.setColorAt(i, c.set(h)); });
-    win.forEach(([x, y, z, h], i) => { o.position.set(x, y, z); o.scale.setScalar(v * 0.97); o.updateMatrix(); m2.setMatrixAt(i, o.matrix); m2.setColorAt(i, c.set(h).multiplyScalar(1.4)); });
-    m2.count = win.length; g.add(m1, m2); gate.add(g);
-    islets.push({ g, R: 11.5 + rnd() * 2.5, a: n / 6 * Math.PI * 2 + rnd() * 0.4, y: -0.8 + rnd() * 3.6, sp: 0.05 + rnd() * 0.04, ph: rnd() * 6 });
+  let buildT0 = null, buildHold = null;                              // buildHold freezes the assembly for screenshots
+  const smooth = (a, b, x) => { const u = Math.min(1, Math.max(0, (x - a) / (b - a))); return u * u * (3 - 2 * u); };
+
+  // ---------- shooting stars across the sky behind everything ----------
+  const boxG = new THREE.BoxGeometry(1, 1, 1);
+  const shoot = new THREE.Mesh(boxG, new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, fog: false })); scene.add(shoot);
+  let shootAt = 2.5; const shootFrom = new THREE.Vector3(), shootDir = new THREE.Vector3();
+
+  // ---------- traffic: cars along the front street, and their twins upside down under the slab ----------
+  const NC = mobile ? 8 : 14, CARC = [0xf4b740, 0xe8eef8, 0xd8453a, 0x2fb8a8, 0x39415a, 0x8a5cf0, 0xe8eef8];
+  const carB = new THREE.InstancedMesh(boxG, new THREE.MeshStandardMaterial({ roughness: 0.45, metalness: 0.35, flatShading: true }), NC * 4);
+  const carL = new THREE.InstancedMesh(boxG, new THREE.MeshBasicMaterial({ color: 0xffffff }), NC * 4);
+  carB.frustumCulled = carL.frustumCulled = false; scene.add(carB, carL);
+  const cars = [];
+  for (let n = 0; n < NC; n++) {
+    const lane = n % 2, c = CARC[n % CARC.length];
+    cars.push({ lane, x: -12 + rnd() * 24, sp: (1.3 + rnd() * 1.4) * (lane ? -1 : 1), z: (lane ? 6.55 : 5.35) * V });
+    const cc = new THREE.Color(c); carB.setColorAt(n * 2, cc); carB.setColorAt(n * 2 + 1, cc.clone().multiplyScalar(0.55));
+    const m = new THREE.Color(c).multiplyScalar(0.35); m.b = Math.min(1, m.b + 0.25); m.g = Math.min(1, m.g + 0.18);
+    carB.setColorAt(NC * 2 + n * 2, m); carB.setColorAt(NC * 2 + n * 2 + 1, m.clone().multiplyScalar(0.6));
+    carL.setColorAt(n * 2, new THREE.Color(2.2, 2.0, 1.6)); carL.setColorAt(n * 2 + 1, new THREE.Color(2.0, 0.25, 0.2));
+    carL.setColorAt(NC * 2 + n * 2, new THREE.Color(0.5, 2.2, 2.0)); carL.setColorAt(NC * 2 + n * 2 + 1, new THREE.Color(0.35, 1.4, 1.3));
   }
-  // shooting stars behind it
-  const shoot = new THREE.Mesh(boxG, new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false })); scene.add(shoot);
-  let shootAt = 2, shootFrom = new THREE.Vector3(), shootDir = new THREE.Vector3();
-  const so = new THREE.Object3D(), sv = new THREE.Vector3(), sc = new THREE.Color();
-  function gateFrame(dt, t, ptr) {
-    gate.rotation.x += ((ptr.y * 0.16) - gate.rotation.x) * Math.min(1, dt * 3);
-    gate.rotation.y += ((ptr.x * 0.26) - gate.rotation.y) * Math.min(1, dt * 3);
-    globe.rotation.y = t * 0.16;
-    haloMat.uniforms.uT.value = t;
-    // city lights only where the globe faces away from its sun, and they twinkle
-    for (let i = 0; i < cityL.length; i++) {
-      const d = cityL[i]; sv.copy(d.n).applyAxisAngle(THREE.Object3D.DEFAULT_UP, globe.rotation.y);
-      const night = THREE.MathUtils.smoothstep(-sv.dot(sunDir), -0.08, 0.32), tw = 0.75 + 0.25 * Math.sin(t * 2.3 + d.ph);
-      so.position.copy(d.p); so.scale.setScalar(d.s * (0.6 + 0.4 * night)); so.updateMatrix(); cityMesh.setMatrixAt(i, so.matrix);
-      cityMesh.setColorAt(i, sc.setRGB(1, 0.72, 0.32).multiplyScalar(night * tw * 2.2 + 0.02));
-    }
-    cityMesh.instanceMatrix.needsUpdate = true; cityMesh.instanceColor.needsUpdate = true;
-    for (let i = 0; i < orbP.length; i++) {
-      const d = orbP[i], a = d.a0 + t * d.sp; so.position.set(Math.cos(a) * d.R, Math.sin(a * 3 + i) * 0.06, Math.sin(a) * d.R).applyQuaternion(d.q);
-      so.rotation.set(t + i, t * 0.7, 0); so.scale.setScalar(d.s); so.updateMatrix(); orbits.setMatrixAt(i, so.matrix);
-    }
-    orbits.instanceMatrix.needsUpdate = true;
-    for (const s of islets) { const a = s.a + t * s.sp; s.g.position.set(Math.cos(a) * s.R, s.y + Math.sin(t * 0.8 + s.ph) * 0.25, Math.sin(a) * s.R * 0.62 - 1.5); s.g.rotation.y = -a + Math.PI / 2; }
-    if (!untie) for (let i = 0; i < tailB.length; i++) {
-      const d = tailB[i]; so.position.copy(d.b); so.position.z += Math.sin(t * 3.2 - d.k * 5 + d.ph) * 0.22 * d.k; so.position.x += Math.sin(t * 2.1 - d.k * 4 + d.ph) * 0.08 * d.k;
-      so.rotation.set(0, 0, 0); so.scale.setScalar(gs * 0.98); so.updateMatrix(); tailMesh.setMatrixAt(i, so.matrix);
-    }
-    tailMesh.instanceMatrix.needsUpdate = true;
-    // now and then a shooting star
-    shootAt -= dt;
-    if (shootAt < 0) { shootAt = 3 + rnd() * 4; shootFrom.set(G.x - 30 + rnd() * 40, G.y + 4 + rnd() * 10, G.z - 30); shootDir.set(1, -0.35 - rnd() * 0.3, 0).normalize(); shoot.userData.t = 0; }
-    if (shoot.userData.t != null && shoot.userData.t < 1) {
-      shoot.userData.t += dt / 0.9; const u = shoot.userData.t;
-      shoot.position.copy(shootFrom).addScaledVector(shootDir, u * 34); shoot.quaternion.setFromUnitVectors(new THREE.Vector3(1, 0, 0), shootDir);
-      shoot.scale.set(4.5, 0.06, 0.06); shoot.material.opacity = Math.sin(u * Math.PI) * 0.9;
-    } else shoot.material.opacity = 0;
+
+  // ---------- the market express: an elevated loop round the island, and its twin under the slab ----------
+  const RX = 14.6, RZ = 6.4, RC = -1, RY = 1.15, NT = 6;
+  const railMat = new THREE.PointsMaterial({ color: 0xf4b740, size: 2, sizeAttenuation: false, transparent: true, opacity: 0, depthWrite: false });
+  { const pts = []; for (let i = 0; i < 360; i++) { const a = i / 360 * Math.PI * 2; pts.push(new THREE.Vector3(Math.cos(a) * RX, RY - 0.22, RC + Math.sin(a) * RZ), new THREE.Vector3(Math.cos(a) * RX, 2 * YM - RY + 0.22, RC + Math.sin(a) * RZ)); }
+    scene.add(new THREE.Points(new THREE.BufferGeometry().setFromPoints(pts), railMat)); }
+  const trainB = new THREE.InstancedMesh(boxG, new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.35, metalness: 0.5, flatShading: true }), NT * 2);
+  const trainW = new THREE.InstancedMesh(boxG, new THREE.MeshBasicMaterial({ color: 0xffffff }), NT * 2);
+  trainB.frustumCulled = trainW.frustumCulled = false; scene.add(trainB, trainW);
+  for (let n = 0; n < NT; n++) { trainB.setColorAt(n, new THREE.Color(n ? 0xdfe5ef : 0xf4b740)); trainB.setColorAt(NT + n, new THREE.Color(n ? 0x1d3a44 : 0x2fb8a8)); trainW.setColorAt(n, new THREE.Color(2.0, 1.55, 0.8)); trainW.setColorAt(NT + n, new THREE.Color(0.4, 2.0, 1.85)); }
+
+  // ---------- drones over the city, blinking ----------
+  const NDR = mobile ? 10 : 18;
+  const drone = new THREE.InstancedMesh(boxG, new THREE.MeshBasicMaterial({ color: 0xffffff }), NDR * 2); drone.frustumCulled = false; scene.add(drone);
+  const drones = []; for (let n = 0; n < NDR; n++) { drones.push({ cx: (rnd() - 0.5) * 16, cz: -1 + (rnd() - 0.5) * 6, r: 2 + rnd() * 6, y: 6.5 + rnd() * 6, sp: (0.2 + rnd() * 0.35) * (rnd() < 0.5 ? -1 : 1), ph: rnd() * 6.28 });
+    drone.setColorAt(n * 2, new THREE.Color(0x10151f)); drone.setColorAt(n * 2 + 1, new THREE.Color(...(n % 3 === 0 ? [2.2, 0.3, 0.25] : n % 3 === 1 ? [0.3, 2.2, 0.8] : [2, 2, 2]))); }
+
+  // ---------- the far isles are markets: each wears a live price and a beam that goes green or red with its day ----------
+  const TAGS = ['NVDAx', 'GLDx', 'EURC', 'TSLAx', 'SPYx', 'cbBTC'];
+  const tags = isles.map((s, i) => {
+    const cv = document.createElement('canvas'); cv.width = 320; cv.height = 96;
+    const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, fog: false, opacity: 0 }));
+    const lift = s.c.y >= 0 ? 6 : -6.5; sp.position.copy(s.c).add(new THREE.Vector3(0, lift, 0)); sp.scale.set(6.4, 1.92, 1); scene.add(sp);
+    const beam = new THREE.Mesh(boxG, new THREE.MeshBasicMaterial({ color: 0x3ff0d8, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false }));
+    beam.scale.set(0.09, 40, 0.09); beam.position.copy(s.c).add(new THREE.Vector3(0, lift > 0 ? 20 + 3 : -20 - 3, 0)); scene.add(beam);
+    return { sym: TAGS[i % TAGS.length], cv, tex, sp, beam, ch: 0, on: false };
+  });
+  function drawTag(tg, m) {
+    const g = tg.cv.getContext('2d'), W2 = tg.cv.width, H2 = tg.cv.height, up = (m.ch24 || 0) >= 0;
+    g.clearRect(0, 0, W2, H2);
+    g.fillStyle = 'rgba(5,8,15,0.82)'; g.fillRect(0, 0, W2, H2);
+    g.fillStyle = up ? '#45e39a' : '#ff6a5a'; g.fillRect(0, 0, 6, H2);
+    g.strokeStyle = 'rgba(233,238,248,0.22)'; g.lineWidth = 2; g.strokeRect(1, 1, W2 - 2, H2 - 2);
+    g.textBaseline = 'middle'; g.fillStyle = '#f4f6fc'; g.font = '700 34px Mono, monospace'; g.fillText(m.sym, 22, 32);
+    const px = m.price >= 1000 ? '$' + Math.round(m.price).toLocaleString('en-US') : '$' + m.price.toFixed(m.price >= 100 ? 2 : 3);
+    g.font = '500 26px Mono, monospace'; g.fillStyle = '#c9d2e3'; g.fillText(px, 22, 70);
+    const ch = m.ch24 == null ? '' : (up ? '+' : '') + m.ch24.toFixed(2) + '%';
+    g.font = '700 26px Mono, monospace'; g.fillStyle = up ? '#45e39a' : '#ff6a5a'; g.textAlign = 'right'; g.fillText(ch, W2 - 18, 70); g.textAlign = 'left';
+    tg.tex.needsUpdate = true; tg.ch = m.ch24 || 0; tg.on = true;
+    tg.beam.material.color.set(up ? 0x45e39a : 0xff6a5a);
   }
+  function setMarkets(list) {
+    const go = () => { for (const tg of tags) { const m = (list || []).find(x => x.sym === tg.sym && x.price > 0); if (m) drawTag(tg, m); } };
+    (document.fonts && document.fonts.load ? document.fonts.load('700 34px Mono').then(go, go) : go());
+  }
+
+  // ---------- deposits: gold cubes drop down the shaft into the pool and go teal under the water ----------
+  const NDP = 9, SX = (SHAFT[0] + 0.5) * V, SZ = 6.5 * V;
+  const dep = new THREE.InstancedMesh(boxG, new THREE.MeshBasicMaterial({ color: 0xffffff }), NDP); dep.frustumCulled = false; scene.add(dep);
+  const splash = new THREE.Mesh(new THREE.TorusGeometry(1, 0.03, 6, 64), new THREE.MeshBasicMaterial({ color: new THREE.Color(1.6, 1.2, 0.5), transparent: true, opacity: 0, depthWrite: false }));
+  splash.rotation.x = -Math.PI / 2; splash.position.set(SX, WATER_Y + 0.015, SZ); scene.add(splash);
+  const goldC = new THREE.Color(2.0, 1.45, 0.45), tealC = new THREE.Color(0.35, 2.0, 1.8), dc = new THREE.Color();
 
   // ---------- the pool ----------
   const wx0 = -17.5, wx1 = 17.5, wTop = WATER_Y;
@@ -399,7 +403,7 @@ export function startWorld(canvas, opts = {}) {
   // ---------- camera ----------
   const S = (pos, look, roll = 0) => ({ pos, look, roll });
   const SHOTS = {
-    gate: S([G.x + 0.5, G.y - 1.6, G.z + 34], [G.x + 0.5, G.y - 2.6, G.z]),
+    gate: S([0, 8, 54], [0, -3, -6]),
     hero: S([-21, 8.5, 31], [-10.5, 1.2, -3]),
     above: S([10, 9, 17], [-1, 2.4, -3]),
     markets: S([-14, 5.5, 14], [2, 3.5, -4]),
@@ -418,7 +422,7 @@ export function startWorld(canvas, opts = {}) {
   const camPos = new THREE.Vector3(...SHOTS[shot].pos), camLook = new THREE.Vector3(...SHOTS[shot].look);
   let camRoll = SHOTS[shot].roll || 0;
   const tPos = new THREE.Vector3(), tLook = new THREE.Vector3();
-  let ext = null, fly = null, untie = null;
+  let ext = null, fly = null;
   const ptr = { x: 0, y: 0, tx: 0, ty: 0 };
   addEventListener('pointermove', e => { ptr.tx = e.clientX / innerWidth - 0.5; ptr.ty = e.clientY / innerHeight - 0.5; }, { passive: true });
   let last = performance.now(), running = true, t = 0, frames = 0;
@@ -428,15 +432,27 @@ export function startWorld(canvas, opts = {}) {
   function frame(dt) {
     t += dt;
     ptr.x += (ptr.tx - ptr.x) * Math.min(1, dt * 2.5); ptr.y += (ptr.ty - ptr.y) * Math.min(1, dt * 2.5);
+    if (buildT0 === null) buildT0 = performance.now();
+    if (buildHold != null) UB.value = buildHold;
+    else if (!reduce && UB.value < 2) UB.value = Math.min(2, (performance.now() - buildT0) / 1000 * 0.4);
+    UT.value = t;
+    const life = smooth(1.0, 1.32, UB.value);                         // the moving parts arrive once the world has landed
     const T = ext || shotsNow()[shot] || SHOTS.hero, portrait = W / H < 1.2;
     tPos.set(...T.pos); tLook.set(...T.look); let tRoll = T.roll || 0;
-    if (portrait) tPos.sub(tLook).multiplyScalar(shot === 'gate' && !ext ? 1.42 : 1.45).add(tLook);
+    const orbiting = shot === 'gate' && !ext;
+    if (orbiting) {
+      // the gate: circle the whole world slowly, coming in from far away while it assembles
+      const a = -0.42 + t * 0.045, R = (portrait ? 64 : 52) + 30 * Math.exp(-t * 0.42), h = 6.5 + Math.sin(t * 0.13) * 2.2 + 8 * Math.exp(-t * 0.42);
+      tPos.set(Math.sin(a) * R, h, -6 + Math.cos(a) * R); tLook.set(0, portrait ? -7.5 : -6.2, -6);
+    } else if (portrait) tPos.sub(tLook).multiplyScalar(1.45).add(tLook);
     tPos.x += ptr.x * 2.0; tPos.y -= ptr.y * 1.2 * (Math.cos(camRoll * Math.PI / 180) >= 0 ? 1 : -1);
     if (fly) {
       const u = Math.min(1, (performance.now() - fly.t0) / 1000 / fly.dur);
       const e = u * u * (3 - 2 * u);
-      camPos.copy(fly.p0).lerp(fly.p1, e); camLook.copy(fly.l0).lerp(fly.l1, Math.min(1, e * 1.4));
-      fovKick = Math.pow(u, 3) * 60; cam.fov = baseFov + fovKick; cam.updateProjectionMatrix();
+      const ie = 1 - e;
+      camPos.copy(fly.p0).multiplyScalar(ie * ie).addScaledVector(fly.mid, 2 * ie * e).addScaledVector(fly.p1, e * e);
+      camLook.copy(fly.l0).lerp(fly.l1, Math.min(1, e * 1.25));
+      fovKick = Math.sin(u * Math.PI) * 16; cam.fov = baseFov + fovKick; cam.updateProjectionMatrix();
       if (u >= 0.82 && !fly.flashed) { fly.flashed = true; fly.onFlash && fly.onFlash(); }
       if (u >= 1) { const done = fly.onDone; fly = null; fovKick = 0; cam.fov = baseFov; cam.updateProjectionMatrix(); const D = ext || shotsNow().hero; camPos.set(...D.pos); camLook.set(...D.look); camRoll = D.roll || 0; shot = 'hero'; done && done(); }
     } else {
@@ -444,21 +460,75 @@ export function startWorld(canvas, opts = {}) {
       camPos.lerp(tPos, k); camLook.lerp(tLook, k); camRoll += (tRoll - camRoll) * k;
     }
     cam.position.copy(camPos); cam.up.set(0, 1, 0); cam.lookAt(camLook); cam.rotateZ(camRoll * Math.PI / 180);
-    // gate globe turns; the blindfold breathes, or comes undone
-    if (shot === 'gate' || fly || untie) gateFrame(dt, t, ptr);
-    if (untie) {
-      const u = Math.min(1, (performance.now() - untie) / 1100);
-      blind.rotation.z = -u * 1.4; blind.scale.setScalar(1 + u * 1.2); blind.position.y = u * 3; blind.userData.mat.opacity = 1 - u;
-      if (u >= 1) blind.visible = false;
-    } else blind.rotation.y = Math.sin(t * 0.6) * 0.05 + (opts.hoverEnter && opts.hoverEnter() ? 0.12 : 0);
+    // ---- the living world ----
+    water.material.opacity = 0.8 * smooth(0.55, 1.05, UB.value);
+    railMat.opacity = 0.3 * life;
+    for (const r of ripples) r.m.visible = life > 0.02;
+    // shooting stars
+    shootAt -= dt;
+    if (shootAt < 0) { shootAt = 2.5 + rnd() * 4.5; shootFrom.set(-45 + rnd() * 50, 18 + rnd() * 16, -75 + rnd() * 20); shootDir.set(1, -0.32 - rnd() * 0.3, 0.1).normalize(); shoot.userData.t = 0; }
+    if (shoot.userData.t != null && shoot.userData.t < 1) {
+      shoot.userData.t += dt / 0.85; const u = shoot.userData.t;
+      shoot.position.copy(shootFrom).addScaledVector(shootDir, u * 40); shoot.quaternion.setFromUnitVectors(new THREE.Vector3(1, 0, 0), shootDir);
+      shoot.scale.set(5, 0.07, 0.07); shoot.material.opacity = Math.sin(u * Math.PI) * 0.9;
+    } else shoot.material.opacity = 0;
+    // cars, and their twins under the slab
+    for (let n = 0; n < NC; n++) {
+      const c = cars[n]; if (!reduce) c.x += c.sp * dt; if (c.x > 12.4) c.x = -12.4; if (c.x < -12.4) c.x = 12.4;
+      const k = life * smooth(12.3, 11.5, Math.abs(c.x)), dir = Math.sign(c.sp);
+      for (const mir of [0, 1]) {
+        const yb = mir ? 2 * YM - 0.33 : 0.33, yc = mir ? 2 * YM - 0.6 : 0.6, base = mir ? NC * 2 : 0;
+        o3.quaternion.identity();
+        o3.position.set(c.x, yb, c.z); o3.scale.set(0.95 * k + 1e-4, 0.26 * k + 1e-4, 0.44 * k + 1e-4); o3.updateMatrix(); carB.setMatrixAt(base + n * 2, o3.matrix);
+        o3.position.set(c.x - dir * 0.05, yc, c.z); o3.scale.set(0.5 * k + 1e-4, 0.22 * k + 1e-4, 0.4 * k + 1e-4); o3.updateMatrix(); carB.setMatrixAt(base + n * 2 + 1, o3.matrix);
+        o3.position.set(c.x + dir * 0.48, yb, c.z); o3.scale.set(0.05 * k + 1e-4, 0.08 * k + 1e-4, 0.36 * k + 1e-4); o3.updateMatrix(); carL.setMatrixAt(base + n * 2, o3.matrix);
+        o3.position.set(c.x - dir * 0.48, yb, c.z); o3.updateMatrix(); carL.setMatrixAt(base + n * 2 + 1, o3.matrix);
+      }
+    }
+    carB.instanceMatrix.needsUpdate = carL.instanceMatrix.needsUpdate = true;
+    // the market express, above and below
+    for (let n = 0; n < NT; n++) {
+      const a = t * 0.27 - n * 0.072, x = Math.cos(a) * RX, z = RC + Math.sin(a) * RZ, ang = Math.atan2(Math.cos(a) * RZ, -Math.sin(a) * RX);
+      for (const mir of [0, 1]) {
+        const y = mir ? 2 * YM - RY : RY, k = life;
+        o3.position.set(x, y, z); o3.rotation.set(0, -ang, 0); o3.scale.set(0.98 * k + 1e-4, 0.36 * k + 1e-4, 0.42 * k + 1e-4); o3.updateMatrix(); trainB.setMatrixAt(mir * NT + n, o3.matrix);
+        o3.scale.set(0.8 * k + 1e-4, 0.1 * k + 1e-4, 0.44 * k + 1e-4); o3.position.y = y + (mir ? -0.04 : 0.04); o3.updateMatrix(); trainW.setMatrixAt(mir * NT + n, o3.matrix);
+      }
+    }
+    o3.rotation.set(0, 0, 0);
+    trainB.instanceMatrix.needsUpdate = trainW.instanceMatrix.needsUpdate = true;
+    // drones
+    for (let n = 0; n < NDR; n++) {
+      const d = drones[n], a = d.ph + t * d.sp, x = d.cx + Math.cos(a) * d.r, z = d.cz + Math.sin(a) * d.r * 0.55, y = d.y + Math.sin(t * 0.9 + d.ph) * 0.4, k = life;
+      o3.quaternion.identity(); o3.position.set(x, y, z); o3.scale.set(0.22 * k + 1e-4, 0.06 * k + 1e-4, 0.22 * k + 1e-4); o3.updateMatrix(); drone.setMatrixAt(n * 2, o3.matrix);
+      const blink = ((t * 1.1 + d.ph) % 1) < 0.22 ? 1 : 0.0001;
+      o3.position.y = y - 0.06; o3.scale.setScalar(0.07 * k * blink + 1e-4); o3.updateMatrix(); drone.setMatrixAt(n * 2 + 1, o3.matrix);
+    }
+    drone.instanceMatrix.needsUpdate = true;
+    // deposits sink into the Ring
+    let sp = 0;
+    for (let n = 0; n < NDP; n++) {
+      const u = ((t / 4.2) + n / NDP) % 1; let x = SX, y, z = SZ, s2 = 0.16, mixT = 0;
+      if (u < 0.42) { const f = u / 0.42; y = 1.4 - (1.4 - WATER_Y) * f * f; }
+      else { const f = (u - 0.42) / 0.58; y = WATER_Y - f * 2.4; z = SZ - f * 3.6; x = SX + Math.sin(f * 6 + n) * 0.3; mixT = Math.min(1, f * 2.2); s2 = 0.16 * (1 - f * 0.85); if (f < 0.35) sp = Math.max(sp, 1 - f / 0.35); }
+      o3.quaternion.setFromEuler(new THREE.Euler(t * 2 + n, t * 1.3 + n, 0)); o3.position.set(x, y, z); o3.scale.setScalar(s2 * life + 1e-4); o3.updateMatrix(); dep.setMatrixAt(n, o3.matrix);
+      dep.setColorAt(n, dc.copy(goldC).lerp(tealC, mixT));
+    }
+    dep.instanceMatrix.needsUpdate = true; dep.instanceColor.needsUpdate = true;
+    splash.scale.setScalar(0.2 + (1 - sp) * 0.9); splash.material.opacity = sp * 0.8 * life;
+    // market tags and beams on the far isles
+    for (const tg of tags) {
+      const k = tg.on ? life : 0;
+      tg.sp.material.opacity = k; tg.beam.material.opacity = k * (0.18 + Math.min(0.5, Math.abs(tg.ch) * 0.08)) * (0.75 + 0.25 * Math.sin(t * 2.4 + tg.ch));
+    }
     // orders drift under the water
-    for (let i = 0; i < NO; i++) { const p = ordP[i]; o3.position.copy(p.p); o3.position.x += Math.sin(t * p.sp + p.ph) * 0.12; o3.position.y += Math.sin(t * p.sp * 1.3 + p.ph) * 0.05; o3.quaternion.setFromEuler(new THREE.Euler(t * p.sp, t * p.sp * 0.7, 0)); o3.scale.setScalar(p.s); o3.updateMatrix(); orders.setMatrixAt(i, o3.matrix); }
+    for (let i = 0; i < NO; i++) { const p = ordP[i]; o3.position.copy(p.p); o3.position.x += Math.sin(t * p.sp + p.ph) * 0.12; o3.position.y += Math.sin(t * p.sp * 1.3 + p.ph) * 0.05; o3.quaternion.setFromEuler(new THREE.Euler(t * p.sp, t * p.sp * 0.7, 0)); o3.scale.setScalar(p.s * life + 1e-4); o3.updateMatrix(); orders.setMatrixAt(i, o3.matrix); }
     orders.instanceMatrix.needsUpdate = true;
     for (const r of ripples) { const u = (t * 0.25 + r.ph) % 1; r.m.scale.setScalar((0.3 + u * 1.5) * r.s); r.m.material.opacity = 0.7 * (1 - u); }
-    for (let i = 0; i < ND; i++) { const d = dotP[i]; if (!reduce) d.u += dt * d.sp; if (d.u > 1) d.u -= 1; bez(wires[d.w], d.u, fp); o3.position.copy(fp); o3.quaternion.identity(); o3.scale.setScalar(0.09 * (1 - d.u * 0.5)); o3.updateMatrix(); dots.setMatrixAt(i, o3.matrix); }
+    for (let i = 0; i < ND; i++) { const d = dotP[i]; if (!reduce) d.u += dt * d.sp; if (d.u > 1) d.u -= 1; bez(wires[d.w], d.u, fp); o3.position.copy(fp); o3.quaternion.identity(); o3.scale.setScalar(0.09 * (1 - d.u * 0.5) * life + 1e-4); o3.updateMatrix(); dots.setMatrixAt(i, o3.matrix); }
     dots.instanceMatrix.needsUpdate = true;
     if (!reduce) { for (let i = 0; i < NM; i++) { let y = mpos[i * 3 + 1] + mv[i] * dt; if (mv[i] > 0 && y > YM - 0.4) y = 2 * YM - 9; if (mv[i] < 0 && y < 0.2) y = 10; mpos[i * 3 + 1] = y; } mgeo.attributes.position.needsUpdate = true; }
-    const pcOn = camPos.y > YM + 0.5 && !(shot === 'gate' && !ext);
+    const pcOn = camPos.y > YM + 0.5 && life > 0.02;
     cards.visible = stamps.visible = pcOn;
     if (pcOn) {
       for (let i = 0; i < NPC; i++) {
@@ -466,7 +536,7 @@ export function startWorld(canvas, opts = {}) {
         const rise = c.age * c.sp, sc2 = Math.min(1, c.age / 0.4) * Math.min(1, Math.max(0, (c.life - c.age) / 0.9));
         o3.position.copy(c.base); o3.position.x += c.dx * rise + Math.sin(t * 1.3 + c.ph) * 0.25; o3.position.y += 0.3 + rise; o3.position.z += c.dz * rise;
         o3.rotation.set(Math.sin(t * 2 + c.ph) * 0.35, t * 0.8 + c.ph, Math.sin(t * 1.7 + c.ph) * 0.25);
-        o3.scale.set(0.46 * sc2 + 1e-4, 0.31 * sc2 + 1e-4, 0.02);
+        o3.scale.set(0.46 * sc2 * life + 1e-4, 0.31 * sc2 * life + 1e-4, 0.02);
         o3.updateMatrix(); cards.setMatrixAt(i, o3.matrix); o3.matrix.multiply(stampM); stamps.setMatrixAt(i, o3.matrix);
       }
       cards.instanceMatrix.needsUpdate = stamps.instanceMatrix.needsUpdate = true;
@@ -481,7 +551,7 @@ export function startWorld(canvas, opts = {}) {
     if (!running) return;
     requestAnimationFrame(loop);
     const lvl = opts.active ? opts.active() : 1;
-    if (lvl === 0 && !fly && !untie) { last = now; return; }
+    if (lvl === 0 && !fly) { last = now; return; }
     if (lvl < 1 && now - lastDraw < 1000 / 10) return;
     if (opts.maxFps && now - lastDraw < 1000 / opts.maxFps - 2) return;
     const dt = Math.min(0.05, (now - last) / 1000); last = now; lastDraw = now;
@@ -496,13 +566,17 @@ export function startWorld(canvas, opts = {}) {
   requestAnimationFrame(loop);
   setTimeout(() => { if (frames === 0) frame(0.016); }, 1500);
   function enter(o = {}) {
-    // untie the blindfold, then dive through the globe and come out over the island
-    untie = performance.now();
-    const go = () => { fly = { t0: performance.now(), dur: reduce ? 0.3 : (o.dur || 2.4), p0: camPos.clone(), p1: G.clone().add(new THREE.Vector3(0.2, 0, -1.5)), l0: camLook.clone(), l1: G.clone().add(new THREE.Vector3(0, -3, -20)), onFlash: o.onFlash, onDone: () => { untie = null; o.onDone && o.onDone(); } }; };
-    reduce ? go() : setTimeout(go, 650);
+    // sweep down from the orbit into the city along a curve, the lens breathing out and back
+    if (UB.value < 1.32) UB.value = 1.32;
+    const D = shotsNow().hero, p1 = new THREE.Vector3(...D.pos), l1 = new THREE.Vector3(...D.look);
+    const mid = camPos.clone().lerp(p1, 0.55).add(new THREE.Vector3(0, 9, 0));
+    fly = { t0: performance.now(), dur: reduce ? 0.3 : (o.dur || 2.1), p0: camPos.clone(), mid, p1, l0: camLook.clone(), l1, onFlash: o.onFlash, onDone: () => { o.onDone && o.onDone(); } };
   }
   return {
     info: () => renderer.info.render, frame, enter, get shots() { return shotsNow(); },
+    setMarkets,
+    built: () => UB.value >= 1.32,
+    holdBuild: v => { buildHold = v; },
     setTarget: (pos, look, roll = 0) => { ext = pos ? { pos, look, roll } : null; },
     setShot: (n, snap) => { const A = shotsNow(); if (!A[n]) return; shot = n; if (snap) { camPos.set(...A[n].pos); camLook.set(...A[n].look); camRoll = A[n].roll || 0; } },
   };

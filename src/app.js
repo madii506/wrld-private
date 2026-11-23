@@ -82,8 +82,28 @@ function renderSel() {
   $('#tAmt').placeholder = side === 'buy' ? `0.00 ${pay}` : `0.00 ${sel ? sel.sym : ''}`;
   $$('#tPay [data-pay]').forEach(b => { b.classList.toggle('on', b.dataset.pay === pay); b.disabled = !!(sel && PAY[b.dataset.pay].mint === sel.mint); });
   $$('.tside [data-side]').forEach(b => b.classList.toggle('on', b.dataset.side === side));
-  goState();
+  renderBal(); goState();
 }
+// ---------- what the connected wallet holds: shown under the amount, and Max fills it in ----------
+let hold = null, holdFor = null;
+const USDC_M = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
+function have() {
+  if (!hold || !sel) return null;
+  if (side === 'sell') return { amt: hold.tokens[sel.mint] || 0, sym: sel.sym };
+  if (pay === 'SOL') return { amt: hold.sol, sym: 'SOL', keep: 0.02 };
+  return { amt: hold.tokens[USDC_M] || 0, sym: 'USDC' };
+}
+function renderBal() {
+  const h = have(), box = $('#tBal');
+  if (!h) { box.hidden = true; return; }
+  box.hidden = false; $('#tBalTxt').textContent = `In your wallet: ${h.amt >= 1000 ? fmt.int(h.amt) : (+h.amt.toFixed(4)).toString()} ${h.sym}`;
+  $('#tMax').disabled = !(h.amt - (h.keep || 0) > 0);
+}
+async function loadHold() {
+  const a = WS.state().address; if (!a) { hold = null; holdFor = null; renderBal(); return; }
+  try { const j = await getJSON('/api/holdings?addr=' + a, 12000); if (WS.state().address === a) { hold = j; holdFor = a; renderBal(); } } catch (e) { hold = null; renderBal(); }
+}
+$('#tMax').addEventListener('click', () => { const h = have(); if (!h) return; const v = Math.max(0, h.amt - (h.keep || 0)); $('#tAmt').value = v >= 1 ? (+v.toFixed(6)).toString() : (+v.toPrecision(6)).toString(); $('#tAmt').dispatchEvent(new Event('input')); });
 $$('.tside [data-side]').forEach(b => b.addEventListener('click', () => { side = b.dataset.side; $('#tAmt').value = ''; quote = null; renderSel(); requote(); }));
 $$('#tPay [data-pay]').forEach(b => b.addEventListener('click', () => { if (b.disabled) return; pay = b.dataset.pay; renderSel(); requote(); }));
 let qTimer = null;
@@ -160,6 +180,7 @@ $('#tGo').addEventListener('click', async e => {
     res.className = 'tres mono ok';
     res.innerHTML = `Sent. <a href="https://solscan.io/tx/${sig}" target="_blank" rel="noopener">View on Solscan ↗</a><br><span>To hide it from here on, move it into your private balance.</span>`;
     $('#tAmt').value = ''; quote = null;
+    setTimeout(loadHold, 6000); setTimeout(loadHold, 20000);
   } catch (err) {
     res.className = 'tres mono bad';
     res.textContent = /reject|denied|cancel/i.test(String(err.message || err)) ? 'You cancelled it in your wallet. Nothing was sent.' : 'Not sent: ' + String(err.message || err).slice(0, 140);
@@ -225,8 +246,23 @@ getJSON('/api/config').then(c => { cfg = c || cfg; renderPriv(); }).catch(() => 
 $('#scanForm').addEventListener('submit', e => { e.preventDefault(); runScan($('#scanIn').value, $('#scanOut')); });
 $('#scanMine').addEventListener('click', e => { e.stopPropagation(); const a = WS.state().address; if (!a) return openWallet(); $('#scanIn').value = a; runScan(a, $('#scanOut')); });
 
+// ---------- the Ring, live: a line on the private tab and three cards on the live tab ----------
+const ago = t => { const d = Math.max(0, Math.floor(Date.now() / 1000 - t)); return d < 60 ? d + 's ago' : d < 3600 ? Math.floor(d / 60) + 'm ago' : d < 86400 ? Math.floor(d / 3600) + 'h ago' : Math.floor(d / 86400) + 'd ago'; };
+let ringT = null;
+async function loadRing() {
+  const set = (k, txt, cls) => { const v = $(`[data-k="${k}"] .v`); if (v) { v.textContent = txt; v.className = 'v mono ' + cls; } };
+  try {
+    const j = await getJSON('/api/ring', 12000);
+    ringT = j.last && j.last[0] ? j.last[0].t : null;
+    set('ringh', fmt.int(j.hour || 0), 'ok'); set('ringd', fmt.int(j.day || 0) + (j.capped ? '+' : ''), 'ok'); set('ringl', ringT ? ago(ringT) : '—', 'ok');
+    const l = $('#ringLine'); l.innerHTML = `<i></i><span>The Ring right now: ${fmt.int(j.hour || 0)} transactions in the last hour${ringT ? `, the latest <b id="ringAgo">${ago(ringT)}</b>` : ''}.</span>`;
+  } catch (e) { set('ringh', 'offline', 'bad'); set('ringd', 'offline', 'bad'); set('ringl', 'offline', 'bad'); $('#ringLine').textContent = ''; }
+}
+loadRing(); setInterval(() => { if (!document.hidden) loadRing(); }, 20000);
+setInterval(() => { if (document.hidden || !ringT) return; const a = $('#ringAgo'); if (a) a.textContent = ago(ringT); const v = $('[data-k="ringl"] .v'); if (v && v.classList.contains('ok')) v.textContent = ago(ringT); }, 1000);
+
 // ---------- start ----------
-WS.onChange(() => { renderSel(); renderPriv(); checkRegistry(); });
+WS.onChange(() => { renderSel(); renderPriv(); checkRegistry(); if (WS.state().address !== holdFor) loadHold(); });
 show(location.hash.slice(1) || 'markets');
 loadMarkets(); setInterval(() => { if (!document.hidden) loadMarkets(); }, 30000);
 renderSel(); renderPriv();

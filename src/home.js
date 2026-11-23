@@ -10,11 +10,12 @@ const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAl
 const Q = new URLSearchParams(location.search);
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 let entered = false;
+let mkts = [], pcSym = 'NVDAx', pcAmt = 250, solSlot = null;   // live markets, the postcard's picks, the last Solana slot read
 
 // ---------- the world ----------
-let world = null, worldLevel = 1, enterHover = false;
+let world = null, worldLevel = 1;
 if (!Q.has('noworld')) {
-  try { world = startWorld($('#world'), { startShot: Q.get('shot') || 'gate', active: () => worldLevel, hoverEnter: () => enterHover }); window.__w = world; }
+  try { world = startWorld($('#world'), { startShot: Q.get('shot') || 'gate', active: () => worldLevel }); window.__w = world; }
   catch (e) { document.body.classList.add('noworld'); }
 }
 
@@ -30,16 +31,16 @@ function openSite(instant) {
 function enter() {
   if (entered) return;
   $('#gate').classList.add('gone');
-  const flash = $('#flash');
   let done = false;
-  const finish = () => { if (done) return; done = true; flash.classList.remove('on'); openSite(true); };
+  const finish = () => { if (done) return; done = true; openSite(true); };
   if (!world || reduce) return finish();
-  world.enter({ onFlash: () => flash.classList.add('on'), onDone: () => setTimeout(finish, 80) });
-  setTimeout(finish, 4800);                                         // never strand anyone on the gate
+  world.enter({ onDone: () => setTimeout(finish, 60) });             // sweep down from the orbit into the city
+  setTimeout(finish, 3600);                                          // never strand anyone on the gate
 }
 $('#gEnter').addEventListener('click', enter);
-$('#gEnter').addEventListener('pointerenter', () => { enterHover = true; });
-$('#gEnter').addEventListener('pointerleave', () => { enterHover = false; });
+// the name glitches now and then, the way the header flickered on H3LIX
+const mark = $('#mark');
+(function glitch() { if (!entered) { mark.classList.add('glitch'); setTimeout(() => mark.classList.remove('glitch'), 80 + Math.random() * 110); } setTimeout(glitch, 1400 + Math.random() * 2600); })();
 addEventListener('keydown', e => { if (!entered && e.key === 'Enter' && !e.target.closest('input,button,a')) enter(); });
 
 // ---------- wallet menus ----------
@@ -115,8 +116,8 @@ addEventListener('resize', () => { measure(); onScroll(); });
 $('#toTop').addEventListener('click', e => { e.preventDefault(); scrollTo({ top: 0, behavior: 'smooth' }); });
 
 // reveals: groups pop in one after another, headings decode as they arrive, hidden cells never sit still
-stagger(['#sgrid', '.faq', '.kvwrap', '#go .center']);
-$$('#hidden h2, #scan h2, #status h2, #faq h2, #hidden .eyebrow, #scan .eyebrow, #status .eyebrow, #faq .eyebrow, #scan .sub, #scan .scanbox, #scan .link').forEach(el => el.classList.add('rv'));
+stagger(['#sgrid', '.faq', '.kvwrap', '#go .center', '.rstats']);
+$$('#hidden h2, #scan h2, #status h2, #faq h2, #clock h2, #ringlive h2, #hidden .eyebrow, #scan .eyebrow, #status .eyebrow, #faq .eyebrow, #clock .eyebrow, #ringlive .eyebrow, #ringlive .sub, #ringlive .rlist, #clock .note, #scan .sub, #scan .scanbox, #scan .link').forEach(el => el.classList.add('rv'));
 const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('vis'); io.unobserve(e.target); } }), { threshold: 0.15 });
 $$('.rv').forEach(el => io.observe(el));
 const dio = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { decode(e.target); dio.unobserve(e.target); } }), { threshold: 0.55 });
@@ -132,6 +133,8 @@ async function loadMarkets() {
   try {
     const j = await getJSON('/api/markets');
     const list = (j.markets || []).filter(m => m.price > 0);
+    mkts = list; pcChips();
+    if (world && world.setMarkets) world.setMarkets(list);
     if (!list.length) throw new Error('no prices');
     $('#mtrack').innerHTML = list.map(m => {
       const up = (m.ch24 || 0) >= 0, ch = m.ch24 == null ? '—' : (up ? '+' : '') + m.ch24.toFixed(2) + '%';
@@ -150,8 +153,102 @@ async function loadMarkets() {
 }
 loadMarkets(); setInterval(() => { if (!document.hidden) loadMarkets(); }, 30000);
 
+// ---------- write one: the same money as a public postcard and as a sealed one ----------
+const PCPICK = ['NVDAx', 'TSLAx', 'SPYx', 'GLDx', 'EURC', 'cbBTC'];
+function pcChips() {
+  const have = PCPICK.filter(x => mkts.some(m => m.sym === x)), list = have.length ? have : mkts.slice(0, 6).map(m => m.sym);
+  if (!list.includes(pcSym)) pcSym = list[0];
+  $('#pcM').innerHTML = list.map(x => `<button type="button" data-s="${x}" class="${x === pcSym ? 'on' : ''}">${x}</button>`).join('');
+  renderPc();
+}
+const tokAmt = x => x >= 1000 ? fmt.int(x) : x >= 1 ? (+x.toFixed(4)).toString() : x > 0 ? (+x.toPrecision(4)).toString() : '0';
+function renderPc() {
+  const m = mkts.find(x => x.sym === pcSym), addr = WS.state().address, from = addr ? fmt.short(addr) : 'your wallet';
+  $('#pcFrom').textContent = from; $('#pcFrom2').textContent = from;
+  $('#pcGot').textContent = m ? `${tokAmt(pcAmt / m.price)} ${m.sym}` : '—';
+  $('#pcPaid').textContent = `${fmt.int(pcAmt)} USDC`;
+  const when = solSlot ? `slot ${fmt.int(solSlot)}` : new Date().toTimeString().slice(0, 5);
+  $('#pcWhen').textContent = when; $('#pcWhen2').textContent = when;
+}
+$('#pcM').addEventListener('click', e => { const b = e.target.closest('[data-s]'); if (!b) return; pcSym = b.dataset.s; $$('#pcM button').forEach(x => x.classList.toggle('on', x === b)); renderPc(); });
+$('#pcA').addEventListener('click', e => { const b = e.target.closest('[data-a]'); if (!b) return; pcAmt = +b.dataset.a; $$('#pcA button').forEach(x => x.classList.toggle('on', x === b)); renderPc(); });
+$('#pcMode').addEventListener('click', e => { const b = e.target.closest('[data-mode]'); if (!b) return; $$('#pcMode button').forEach(x => x.classList.toggle('on', x === b)); $('#pc').classList.toggle('ring', b.dataset.mode === 'ring'); });
+$('#pc').addEventListener('click', () => { const ring = !$('#pc').classList.contains('ring'); $('#pc').classList.toggle('ring', ring); $$('#pcMode button').forEach(x => x.classList.toggle('on', (x.dataset.mode === 'ring') === ring)); });
+WS.onChange(renderPc);
+cipher($$('.pc .back b.h'));
+
 // ---------- live status ----------
-loadStatus(); setInterval(() => { if (!document.hidden) loadStatus(); }, 20000);
+const status = async () => { const j = await loadStatus(); if (j && j.slot) { solSlot = j.slot; renderPc(); } };
+status(); setInterval(() => { if (!document.hidden) status(); }, 20000);
+
+// ---------- around the clock: six exchanges in their own local time, and Solana, which never closes ----------
+const EX = [
+  { city: 'New York', ex: 'NYSE · Nasdaq', tz: 'America/New_York', s: [[570, 960]] },
+  { city: 'London', ex: 'LSE', tz: 'Europe/London', s: [[480, 990]] },
+  { city: 'Frankfurt', ex: 'Xetra', tz: 'Europe/Berlin', s: [[540, 1050]] },
+  { city: 'Tokyo', ex: 'TSE', tz: 'Asia/Tokyo', s: [[540, 690], [750, 930]] },
+  { city: 'Hong Kong', ex: 'HKEX', tz: 'Asia/Hong_Kong', s: [[570, 720], [780, 960]] },
+  { city: 'Sydney', ex: 'ASX', tz: 'Australia/Sydney', s: [[600, 960]] },
+];
+const WD = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+const fmts = {};
+function localAt(tz, d) {
+  const f = fmts[tz] || (fmts[tz] = new Intl.DateTimeFormat('en-US', { timeZone: tz, weekday: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' }));
+  const p = Object.fromEntries(f.formatToParts(d).map(x => [x.type, x.value]));
+  return { wd: WD[p.weekday], min: +p.hour * 60 + +p.minute + +p.second / 60, txt: `${p.hour}:${p.minute}:${p.second}` };
+}
+const span = m => m >= 1440 ? `${Math.floor(m / 1440)}d ${Math.floor(m % 1440 / 60)}h` : `${Math.floor(m / 60)}h ${String(Math.floor(m % 60)).padStart(2, '0')}m`;
+function session(e, L) {
+  const wk = L.wd >= 1 && L.wd <= 5;
+  if (wk) for (const [a, b] of e.s) if (L.min >= a && L.min < b) return { open: true, left: b - L.min };
+  if (wk) for (const [a] of e.s) if (L.min < a) return { open: false, left: a - L.min };
+  let days = 1; while ((L.wd + days) % 7 === 0 || (L.wd + days) % 7 === 6) days++;
+  return { open: false, left: days * 1440 - L.min + e.s[0][0] };
+}
+const cells = () => Array.from({ length: 48 }, () => '<i></i>').join('');
+$('#clocks').innerHTML = EX.map((e, i) => `<article class="ck spot" data-i="${i}"><span class="city">${e.city}</span><span class="ex">${e.ex}</span><b class="tm">--:--:--</b><span class="st"><i></i><em>—</em></span><span class="in"></span><div class="day">${cells()}</div></article>`).join('')
+  + `<article class="ck sol spot"><span class="city">Solana</span><span class="ex">xStocks, gold, the euro, crypto</span><b class="tm" id="solTm">--:--:--</b><span class="st"><i></i><em>always open</em></span><span class="in" id="solIn">every day, every hour</span><div class="day">${cells()}</div></article>`;
+function tickClocks() {
+  const d = new Date();
+  $$('#clocks .ck[data-i]').forEach(el => {
+    const e = EX[+el.dataset.i], L = localAt(e.tz, d), st = session(e, L), wk = L.wd >= 1 && L.wd <= 5;
+    el.classList.toggle('open', st.open);
+    el.querySelector('.tm').textContent = L.txt;
+    el.querySelector('.st em').textContent = st.open ? 'open' : 'closed';
+    el.querySelector('.in').textContent = (st.open ? 'closes in ' : 'opens in ') + span(st.left);
+    const now = Math.floor(L.min / 30);
+    el.querySelectorAll('.day i').forEach((c, k) => { c.className = (wk && e.s.some(([a, b]) => k * 30 < b && k * 30 + 30 > a) ? 't' : '') + (k === now ? ' now' : ''); });
+  });
+  const u = localAt('UTC', d); $('#solTm').textContent = u.txt + ' UTC';
+  $('#solIn').textContent = solSlot ? `slot ${fmt.int(solSlot)}, every day, every hour` : 'every day, every hour';
+  const nowU = Math.floor(u.min / 30); $$('#clocks .sol .day i').forEach((c, k) => { c.className = k === nowU ? 'now' : ''; });
+}
+stagger(['#clocks']); $$('#clocks .ck').forEach(el => io.observe(el));
+tickClocks(); setInterval(() => { if (!document.hidden) tickClocks(); }, 1000);
+
+// ---------- the Ring, live: what the chain shows of the latest transactions on the program ----------
+const seen = new Set(); let ringLatest = null;
+const ago = t => { const d = Math.max(0, Math.floor(Date.now() / 1000 - t)); return d < 60 ? d + 's ago' : d < 3600 ? Math.floor(d / 60) + 'm ago' : d < 86400 ? Math.floor(d / 3600) + 'h ago' : Math.floor(d / 86400) + 'd ago'; };
+async function loadRing() {
+  try {
+    const j = await getJSON('/api/ring', 12000);
+    countTo($('#rHour'), j.hour || 0, n => fmt.int(n)); countTo($('#rDay'), j.day || 0, n => fmt.int(n) + (j.capped ? '+' : ''));
+    const first = seen.size === 0, last = j.last || [];
+    $('#rList').innerHTML = last.map(x => `<a class="rtx${!first && !seen.has(x.sig) ? ' new' : ''}" href="https://solscan.io/tx/${x.sig}" target="_blank" rel="noopener"><i class="dot"></i><span class="sig mono">${x.sig.slice(0, 6)}…${x.sig.slice(-6)}</span><span class="ago mono" data-t="${x.t || ''}">${x.t ? ago(x.t) : '—'}</span><span class="go">↗</span></a>`).join('') || '<div class="ph mono">No transactions in the latest read.</div>';
+    last.forEach(x => seen.add(x.sig)); ringLatest = last[0] && last[0].t;
+    $('#rLast').textContent = ringLatest ? ago(ringLatest) : '—';
+  } catch (e) {
+    $('#rList').innerHTML = '<div class="ph mono">The Ring could not be read right now. <button class="btn sm" id="rRetry" type="button">Retry</button></div>';
+    const r = $('#rRetry'); r && r.addEventListener('click', loadRing);
+  }
+}
+loadRing(); setInterval(() => { if (!document.hidden) loadRing(); }, 20000);
+setInterval(() => { if (document.hidden) return; if (ringLatest) $('#rLast').textContent = ago(ringLatest); $$('#rList .ago[data-t]').forEach(a => { if (a.dataset.t) a.textContent = ago(+a.dataset.t); }); }, 1000);
+
+// ---------- the section menu on narrow screens ----------
+$('#menuBtn').addEventListener('click', e => { e.stopPropagation(); const o = $('#sheet').classList.toggle('open'); $('#menuBtn').setAttribute('aria-expanded', o ? 'true' : 'false'); });
+$('#sheet').addEventListener('click', e => { if (e.target.closest('a')) { $('#sheet').classList.remove('open'); $('#menuBtn').setAttribute('aria-expanded', 'false'); } });
+document.addEventListener('click', e => { if (!e.target.closest('#sheet')) $('#sheet').classList.remove('open'); });
 
 // ---------- scan ----------
 const runScan = addr => scanInto(addr, $('#scanOut'));
