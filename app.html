@@ -7,17 +7,17 @@
 <meta name="description" content="Trade worldwide markets privately.">
 <meta name="theme-color" content="#05070d">
 <meta property="og:image" content="/assets/img/og.png">
-<link rel="icon" type="image/png" sizes="32x32" href="/assets/img/icon-32.png?v=2">
-<link rel="icon" type="image/png" sizes="64x64" href="/assets/img/icon-64.png?v=2">
-<link rel="stylesheet" href="/assets/css/base.css?v=2">
-<link rel="stylesheet" href="/assets/css/app.css?v=2">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/img/icon-32.png?v=4">
+<link rel="icon" type="image/png" sizes="64x64" href="/assets/img/icon-64.png?v=4">
+<link rel="stylesheet" href="/assets/css/base.css?v=4">
+<link rel="stylesheet" href="/assets/css/app.css?v=4">
 </head>
 <body>
 <div id="wipe" aria-hidden="true"></div>
 <canvas id="trail" aria-hidden="true"></canvas>
 <div class="sky" aria-hidden="true"></div>
 <header class="bar">
-  <a class="brand pix" href="/?in"><img src="/assets/img/icon-64.png?v=2" alt="" width="24" height="24">WRLD</a>
+  <a class="brand name" href="/?in"><img src="/assets/img/icon-64.png?v=4" alt="" width="24" height="24">WRLD</a>
   <nav class="tabs" role="tablist">
     <button role="tab" type="button" data-tab="markets" class="on">Markets</button><button role="tab" type="button" data-tab="private">Private</button><button role="tab" type="button" data-tab="scan">Scan</button><button role="tab" type="button" data-tab="live">Live</button>
   </nav>
@@ -39,6 +39,7 @@
         <label class="field"><span class="mono k" id="tPayL">Pay with</span>
           <div class="row"><input id="tAmt" class="mono" inputmode="decimal" placeholder="0.00" aria-label="Amount"><div class="seg" id="tPay"><button class="on" type="button" data-pay="SOL">SOL</button><button type="button" data-pay="USDC">USDC</button></div></div>
         </label>
+        <div class="bal mono" id="tBal" hidden><span id="tBalTxt"></span><button type="button" class="maxb" id="tMax">Max</button></div>
         <div class="quote mono" id="tQuote">Enter an amount for a live quote.</div>
         <button class="btn gold wide" id="tGo" type="button">Connect a wallet to trade</button>
         <p class="tnote" id="tNote">This swap is public, like any swap. Moving what you buy into your private balance hides it from then on.</p>
@@ -49,7 +50,7 @@
 
   <!-- private -->
   <section class="pane" data-pane="private" id="private">
-    <div class="phead"><p class="eyebrow mono">Private</p><h1 class="pix">Your other side.</h1><p class="psub">Solana Privacy Rings on mainnet. Keys are derived and kept in this tab.</p></div>
+    <div class="phead"><p class="eyebrow mono">Private</p><h1 class="pix">Your other side.</h1><p class="psub">Solana Privacy Rings on mainnet. Keys are derived and kept in this tab.</p><p class="ringline mono" id="ringLine"></p></div>
     <div class="pgrid">
       <article class="card spot" id="pc1">
         <b class="num mono">1</b><h3>Your private wallet</h3>
@@ -92,9 +93,12 @@
       <div class="sc spot" data-k="slot"><span class="mono k">Solana slot</span><b class="v mono">checking</b></div>
       <div class="sc spot" data-k="prices"><span class="mono k">Markets priced</span><b class="v mono">checking</b></div>
       <div class="sc spot" data-k="relay"><span class="mono k">Private moves relay</span><b class="v mono">checking</b></div>
+      <div class="sc spot" data-k="ringh"><span class="mono k">Ring transactions, last hour</span><b class="v mono">checking</b></div>
+      <div class="sc spot" data-k="ringl"><span class="mono k">Latest Ring transaction</span><b class="v mono">checking</b></div>
+      <div class="sc spot" data-k="ringd"><span class="mono k">Ring transactions, last 24 hours</span><b class="v mono">checking</b></div>
     </div>
   </section>
 </main>
-<script type="module" src="/assets/js/app.js?v=2"></script>
+<script type="module" src="/assets/js/app.js?v=4"></script>
 </body>
 </html>

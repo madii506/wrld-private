@@ -11,12 +11,13 @@
 <meta property="og:description" content="Trade worldwide markets privately.">
 <meta property="og:image" content="/assets/img/og.png">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="icon" type="image/png" sizes="32x32" href="/assets/img/icon-32.png?v=2">
-<link rel="icon" type="image/png" sizes="64x64" href="/assets/img/icon-64.png?v=2">
-<link rel="apple-touch-icon" href="/assets/img/icon-180.png?v=2">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/img/icon-32.png?v=4">
+<link rel="icon" type="image/png" sizes="64x64" href="/assets/img/icon-64.png?v=4">
+<link rel="apple-touch-icon" href="/assets/img/icon-180.png?v=4">
 <link rel="preload" href="/assets/fonts/pix.ttf" as="font" type="font/ttf" crossorigin>
-<link rel="stylesheet" href="/assets/css/base.css?v=2">
-<link rel="stylesheet" href="/assets/css/home.css?v=2">
+<link rel="preload" href="/assets/fonts/name.ttf" as="font" type="font/ttf" crossorigin>
+<link rel="stylesheet" href="/assets/css/base.css?v=4">
+<link rel="stylesheet" href="/assets/css/home.css?v=4">
 </head>
 <body class="locked">
 <canvas id="world" aria-hidden="true"></canvas>
@@ -27,7 +28,7 @@
 <canvas id="trail" aria-hidden="true"></canvas>
 
 <section id="gate" aria-label="WRLD">
-  <h1 class="sr">WRLD</h1>
+  <h1 id="mark" class="name" data-text="WRLD" aria-label="WRLD"><span>W</span><span>R</span><span>L</span><span>D</span></h1>
   <div class="gbtns">
     <div class="menuwrap">
       <button class="btn ghost" id="gConnect" aria-haspopup="true">Connect</button>
@@ -38,9 +39,9 @@
 </section>
 
 <header id="nav">
-  <a class="brand pix" href="#top" id="toTop"><img src="/assets/img/icon-64.png?v=2" alt="" width="22" height="22">WRLD</a>
+  <a class="brand name" href="#top" id="toTop"><img src="/assets/img/icon-64.png?v=4" alt="" width="22" height="22">WRLD</a>
   <nav class="links">
-    <a href="#markets">Markets</a><a href="#descend">The pool</a><a href="#hidden">Hidden</a><a href="#scan">Scan</a><a href="#status">Live</a><a href="#faq">FAQ</a>
+    <a href="#markets">Markets</a><a href="#descend">The pool</a><a href="#ringlive">The Ring</a><a href="#hidden">Hidden</a><a href="#scan">Scan</a><a href="#status">Live</a><a href="#faq">FAQ</a>
   </nav>
   <div class="right">
     <div class="menuwrap">
@@ -48,7 +49,9 @@
       <div class="wmenu right" id="nMenu" role="menu"></div>
     </div>
     <a class="btn gold sm" href="/app">Open app</a>
+    <button class="chip menubtn" id="menuBtn" type="button" aria-label="Sections" aria-expanded="false"><svg width="16" height="14" viewBox="0 0 8 7" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="M0 0h8v1H0zM0 3h8v1H0zM0 6h8v1H0z"/></svg></button>
   </div>
+  <nav class="sheet" id="sheet" aria-label="Sections"><a href="#write">Write one</a><a href="#markets">Markets</a><a href="#clock">Around the clock</a><a href="#descend">The pool</a><a href="#ringlive">The Ring, live</a><a href="#hidden">What stays hidden</a><a href="#scan">Scan</a><a href="#how">Four moves</a><a href="#hood">Under the hood</a><a href="#status">Live checks</a><a href="#faq">FAQ</a><a class="btn gold" href="/app">Open app</a></nav>
 </header>
 
 <main id="site">
@@ -74,10 +77,48 @@
     </div>
   </section>
 
+  <section class="band" id="write" data-cam="above">
+    <div class="wrap two">
+      <div>
+        <p class="eyebrow mono">02 / Write one</p>
+        <h2 class="pix">Write your own postcard.</h2>
+        <p class="sub">Pick a market and an amount. Front: what the chain shows when you buy it in public. Back: what it shows when the same money moves inside the Ring.</p>
+        <div class="pcform">
+          <div class="pcrow"><span class="mono k">Market</span><div class="chips" id="pcM"></div></div>
+          <div class="pcrow"><span class="mono k">Amount</span><div class="chips" id="pcA"><button type="button" data-a="50">$50</button><button type="button" data-a="250" class="on">$250</button><button type="button" data-a="1000">$1,000</button><button type="button" data-a="10000">$10,000</button></div></div>
+          <div class="seg pcmode" id="pcMode"><button type="button" class="on" data-mode="public">Buy in public</button><button type="button" data-mode="ring">Send inside the Ring</button></div>
+        </div>
+      </div>
+      <div class="pcwrap">
+        <div class="pc" id="pc">
+          <div class="face front">
+            <div class="pch"><span class="pix">Postcard</span><span class="stamp"><img src="/assets/img/icon-64.png?v=4" alt="" width="40" height="40"></span></div>
+            <div class="pcl"><span>From</span><b id="pcFrom">your wallet</b></div>
+            <div class="pcl"><span>To</span><b>Jupiter, a public swap</b></div>
+            <div class="pcl"><span>Bought</span><b id="pcGot">—</b></div>
+            <div class="pcl"><span>Paid</span><b id="pcPaid">—</b></div>
+            <div class="pcl"><span>When</span><b id="pcWhen">—</b></div>
+            <p class="pcf">Anyone can read this card, forever.</p>
+            <span class="postmark mono">SOLANA<br>PUBLIC</span>
+          </div>
+          <div class="face back">
+            <div class="pch"><span class="pix">Sealed</span><span class="seal" aria-hidden="true"></span></div>
+            <div class="pcl"><span>From</span><b id="pcFrom2">your wallet</b></div>
+            <div class="pcl"><span>To</span><b>their wallet</b></div>
+            <div class="pcl"><span>What</span><b class="h">Hidden</b></div>
+            <div class="pcl"><span>How much</span><b class="h">Hidden</b></div>
+            <div class="pcl"><span>When</span><b id="pcWhen2">—</b></div>
+            <p class="pcf">The chain sees two wallets. Not what moved, not how much.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section class="pin" id="markets" data-cam="markets" style="--h:320vh">
     <div class="sticky">
       <div class="mhead wrap">
-        <p class="eyebrow mono">02 / The world's markets</p>
+        <p class="eyebrow mono">03 / The world's markets</p>
         <h2 class="pix">Stocks, gold, currencies, crypto.</h2>
         <p class="sub">Live prices on Solana, read from Jupiter. <span id="mstate" class="mono state">loading</span></p>
       </div>
@@ -85,11 +126,20 @@
     </div>
   </section>
 
+  <section class="band" id="clock" data-cam="markets">
+    <div class="wrap">
+      <p class="eyebrow mono">04 / Around the clock</p>
+      <h2 class="pix">The exchanges sleep.<br><span class="gold">Solana doesn't.</span></h2>
+      <div class="clocks" id="clocks" aria-live="off"></div>
+      <p class="note mono">Regular trading hours in each city's local time. Holidays are not shown.</p>
+    </div>
+  </section>
+
   <section class="pin win" id="descend" data-cam="pool" style="--h:300vh">
     <div class="sticky">
       <div class="wrap two">
         <div>
-          <p class="eyebrow mono">03 / The pool</p>
+          <p class="eyebrow mono">05 / The pool</p>
           <h2 class="pix">Deposit once.<br>Then it sinks.</h2>
         </div>
         <ol class="steps">
@@ -108,9 +158,25 @@
     </div>
   </section>
 
+  <section class="band" id="ringlive" data-cam="under">
+    <div class="wrap two">
+      <div>
+        <p class="eyebrow mono">06 / Inside the Ring</p>
+        <h2 class="pix">The Ring, live.</h2>
+        <p class="sub">Transactions on the Privacy Rings program, read from Solana now.</p>
+        <div class="rstats">
+          <div><span class="mono">Last hour</span><b class="pix" id="rHour">—</b></div>
+          <div><span class="mono">Last 24 hours</span><b class="pix" id="rDay">—</b></div>
+          <div><span class="mono">Latest</span><b class="pix" id="rLast">—</b></div>
+        </div>
+      </div>
+      <div class="rlist spot" id="rList"><div class="ph mono">Reading the Ring…</div></div>
+    </div>
+  </section>
+
   <section class="band" id="hidden" data-cam="under">
     <div class="wrap">
-      <p class="eyebrow mono">04 / What stays hidden</p>
+      <p class="eyebrow mono">07 / What stays hidden</p>
       <h2 class="pix">Private where it can be.<br>Plain about the rest.</h2>
       <div class="table rv">
         <div class="tr th"><span>Action</span><span>Wallet</span><span>Asset</span><span>Amount</span></div>
@@ -127,7 +193,7 @@
   <section class="band" id="scan" data-cam="vaults">
     <div class="wrap two">
       <div>
-        <p class="eyebrow mono">05 / Scan</p>
+        <p class="eyebrow mono">08 / Scan</p>
         <h2 class="pix">What does the chain know about you?</h2>
         <p class="sub">Paste any Solana address. Everything below is read live and is public right now.</p>
         <form class="scanbox" id="scanForm" autocomplete="off">
@@ -144,7 +210,7 @@
 
   <section class="pin" id="how" data-cam="both" style="--h:300vh">
     <div class="sticky">
-      <div class="wrap"><p class="eyebrow mono">06 / Four moves</p><h2 class="pix">How you trade the world in private.</h2></div>
+      <div class="wrap"><p class="eyebrow mono">09 / Four moves</p><h2 class="pix">How you trade the world in private.</h2></div>
       <div class="track cards" id="howTrack">
         <article class="hc spot"><b class="mono">1</b><h3>Make your private wallet</h3><p>One signature from your wallet derives it, right in this tab. Nothing secret leaves your browser.</p></article>
         <article class="hc spot"><b class="mono">2</b><h3>Fund it</h3><p>Deposit SOL, USDC or a market token into the Ring. From then on the balance is a note only you can read.</p></article>
@@ -154,9 +220,29 @@
     </div>
   </section>
 
+  <section class="band" id="hood" data-cam="both">
+    <div class="wrap">
+      <p class="eyebrow mono">10 / Under the hood</p>
+      <h2 class="pix">What actually runs.</h2>
+      <div class="hood">
+        <article class="hd spot"><b class="mono">key</b><h3>One signature, one private wallet</h3><p>Your wallet signs the standard Privacy Rings derivation message. The private keys are derived in this tab and never leave it.</p></article>
+        <article class="hd spot"><b class="mono">notes</b><h3>Encrypted notes</h3><p>A private balance is a set of encrypted notes in the Ring. Only your viewing key can open them.</p></article>
+        <article class="hd spot"><b class="mono">proof</b><h3>Zero-knowledge proofs</h3><p>Every private send carries a proof the program checks on chain: the notes exist, they are yours, and they are spent once.</p></article>
+        <article class="hd spot"><b class="mono">tee</b><h3>Proved in an enclave</h3><p>Proofs come from a prover in an AWS Nitro Enclave. The SDK checks its attestation and encrypts every request to it.</p></article>
+        <article class="hd spot"><b class="mono">v1</b><h3>One transaction</h3><p>Every private move is a single Solana transaction in the version 1 format, up to 4,096 bytes, enough to carry its proof.</p></article>
+        <article class="hd spot"><b class="mono">sync</b><h3>Decrypted in your tab</h3><p>An indexer stores the Ring's encrypted state so your wallet finds its notes fast. Opening them happens in your tab.</p></article>
+      </div>
+      <div class="progs">
+        <a class="prog" href="https://solscan.io/account/ring1GaLCuJnkUMVkX2JeZLTTX17wKsV4fZmPVzXANW" target="_blank" rel="noopener"><span class="mono k">Ring program</span><b class="mono">ring1GaLCuJnkUMVkX2JeZLTTX17wKsV4fZmPVzXANW</b></a>
+        <a class="prog" href="https://solscan.io/account/regy3WAeRXMYuMYxr5iK3Bf9Arr3PcxGxyzAddbiqDQ" target="_blank" rel="noopener"><span class="mono k">Registry program</span><b class="mono">regy3WAeRXMYuMYxr5iK3Bf9Arr3PcxGxyzAddbiqDQ</b></a>
+        <a class="prog" href="https://solscan.io/account/777pvSGe5LaBd9nCczvE2FXEauiwtfGJ5XRpjKyniGor" target="_blank" rel="noopener"><span class="mono k">Default ring</span><b class="mono">777pvSGe5LaBd9nCczvE2FXEauiwtfGJ5XRpjKyniGor</b></a>
+      </div>
+    </div>
+  </section>
+
   <section class="band" id="status" data-cam="end">
     <div class="wrap">
-      <p class="eyebrow mono">07 / Live</p>
+      <p class="eyebrow mono">11 / Live</p>
       <h2 class="pix">Checked from this page, now.</h2>
       <div class="sgrid" id="sgrid">
         <div class="sc spot" data-k="ring"><span class="mono k">Privacy Rings program</span><b class="v mono">checking</b></div>
@@ -171,7 +257,7 @@
 
   <section class="band" id="faq" data-cam="end">
     <div class="wrap faqsplit">
-      <div><p class="eyebrow mono">08 / FAQ</p><h2 class="pix">Straight answers.</h2></div>
+      <div><p class="eyebrow mono">12 / FAQ</p><h2 class="pix">Straight answers.</h2></div>
       <div class="faq">
         <details><summary>Who holds my money?</summary><p>You do. Your private wallet is derived from a signature in your own browser, and every transaction is signed by your wallet. WRLD never sees a key.</p></details>
         <details><summary>What does the chain still see?</summary><p>Wallet addresses, deposits, withdrawals and any swap on a public market. What sits in your private balance, and what you send from it and how much, is encrypted.</p></details>
@@ -189,6 +275,6 @@
     </div>
   </section>
 </main>
-<script type="module" src="/assets/js/home.js?v=2"></script>
+<script type="module" src="/assets/js/home.js?v=4"></script>
 </body>
 </html>
