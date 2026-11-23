@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>WRLD</title>
+<meta name="description" content="Trade worldwide markets privately. Stocks, gold, currencies and crypto on Solana, from a balance only your key can read.">
+<meta name="theme-color" content="#05070d">
+<meta property="og:type" content="website">
+<meta property="og:title" content="WRLD">
+<meta property="og:description" content="Trade worldwide markets privately.">
+<meta property="og:image" content="/assets/img/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/assets/img/icon-64.png">
+<link rel="apple-touch-icon" href="/assets/img/icon-180.png">
+<link rel="preload" href="/assets/fonts/pix.ttf" as="font" type="font/ttf" crossorigin>
+<link rel="stylesheet" href="/assets/css/base.css?v=2">
+<link rel="stylesheet" href="/assets/css/home.css?v=2">
+</head>
+<body class="locked">
+<canvas id="world" aria-hidden="true"></canvas>
+<div id="shade" aria-hidden="true"></div>
+<div id="flash" aria-hidden="true"></div>
+<div id="tide" aria-hidden="true"></div>
+<div id="wipe" aria-hidden="true"></div>
+<canvas id="trail" aria-hidden="true"></canvas>
+
+<section id="gate" aria-label="WRLD">
+  <h1 class="sr">WRLD</h1>
+  <div class="gbtns">
+    <div class="menuwrap">
+      <button class="btn ghost" id="gConnect" aria-haspopup="true">Connect</button>
+      <div class="wmenu" id="gMenu" role="menu"></div>
+    </div>
+    <button class="btn gold" id="gEnter">Enter</button>
+  </div>
+</section>
+
+<header id="nav">
+  <a class="brand pix" href="#top" id="toTop"><img src="/assets/img/icon-64.png" alt="" width="22" height="22">WRLD</a>
+  <nav class="links">
+    <a href="#markets">Markets</a><a href="#descend">The pool</a><a href="#hidden">Hidden</a><a href="#scan">Scan</a><a href="#status">Live</a><a href="#faq">FAQ</a>
+  </nav>
+  <div class="right">
+    <div class="menuwrap">
+      <button class="chip" id="nConnect" aria-haspopup="true"><i class="dot"></i><span>Connect</span></button>
+      <div class="wmenu right" id="nMenu" role="menu"></div>
+    </div>
+    <a class="btn gold sm" href="/app">Open app</a>
+  </div>
+</header>
+
+<main id="site">
+  <span id="top"></span>
+  <section class="hero" id="hero" data-cam="hero" data-hold="0.55">
+    <div class="wrap">
+      <h2 class="pix hh" id="heroH">Trade the world<br><span class="gold">in private.</span></h2>
+      <p class="hsub">Stocks, gold, currencies and crypto on Solana, held in a balance only your key can read.</p>
+      <div class="hbtns"><a class="btn gold lg" href="/app">Open app</a><a class="btn ghost lg" href="#descend">See how it hides</a></div>
+    </div>
+    <a class="cue" href="#public" aria-label="Scroll down"><svg width="22" height="30" viewBox="0 0 11 15" shape-rendering="crispEdges" aria-hidden="true"><g fill="currentColor"><path d="M0 0h2v2H0zM2 2h2v2H2zM4 4h3v2H4zM7 2h2v2H7zM9 0h2v2H9z"/></g><g fill="currentColor" transform="translate(0 4.5)"><path d="M0 0h2v2H0zM2 2h2v2H2zM4 4h3v2H4zM7 2h2v2H7zM9 0h2v2H9z"/></g><g fill="currentColor" transform="translate(0 9)"><path d="M0 0h2v2H0zM2 2h2v2H2zM4 4h3v2H4zM7 2h2v2H7zM9 0h2v2H9z"/></g></svg></a>
+  </section>
+  <section class="pin win" id="public" data-cam="above" style="--h:260vh">
+    <div class="sticky">
+      <div class="wrap">
+        <p class="eyebrow mono">01 / The public side</p>
+        <h2 class="big pix words" id="postcard"><span>Every</span> <span>trade</span> <span>on</span> <span>a</span> <span>public</span> <span>chain</span> <span>is</span> <span>a</span> <span class="gold">postcard.</span></h2>
+        <div class="lines">
+          <p class="line" data-at="0.45">Who sent it. What it was. How much.</p>
+          <p class="line" data-at="0.65">Anyone can read it, forever.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="pin" id="markets" data-cam="markets" style="--h:320vh">
+    <div class="sticky">
+      <div class="mhead wrap">
+        <p class="eyebrow mono">02 / The world's markets</p>
+        <h2 class="pix">Stocks, gold, currencies, crypto.</h2>
+        <p class="sub">Live prices on Solana, read from Jupiter. <span id="mstate" class="mono state">loading</span></p>
+      </div>
+      <div class="track" id="mtrack"></div>
+    </div>
+  </section>
+
+  <section class="pin win" id="descend" data-cam="pool" style="--h:300vh">
+    <div class="sticky">
+      <div class="wrap two">
+        <div>
+          <p class="eyebrow mono">03 / The pool</p>
+          <h2 class="pix">Deposit once.<br>Then it sinks.</h2>
+        </div>
+        <ol class="steps">
+          <li data-at="0.12"><b class="mono">01</b><div><h3>Deposit</h3><p>Your wallet sends into the Ring. This one step is public.</p></div></li>
+          <li data-at="0.38"><b class="mono">02</b><div><h3>It becomes a note</h3><p>Your balance is now encrypted. Only your key opens it.</p></div></li>
+          <li data-at="0.64"><b class="mono">03</b><div><h3>Trade and send from there</h3><p>What moves and how much is ciphertext to everyone else.</p></div></li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <section class="pin win" id="flip" data-cam="flip" style="--h:240vh">
+    <div class="sticky">
+      <div class="flipword pix" aria-label="The other side"><span>THE OTHER</span><span>SIDE</span></div>
+      <p class="fliphint mono">same world, upside down, lit only for you</p>
+    </div>
+  </section>
+
+  <section class="band" id="hidden" data-cam="under">
+    <div class="wrap">
+      <p class="eyebrow mono">04 / What stays hidden</p>
+      <h2 class="pix">Private where it can be.<br>Plain about the rest.</h2>
+      <div class="table rv">
+        <div class="tr th"><span>Action</span><span>Wallet</span><span>Asset</span><span>Amount</span></div>
+        <div class="tr"><span>Hold a private balance</span><span class="h">—</span><span class="h">Hidden</span><span class="h">Hidden</span></div>
+        <div class="tr"><span>Send privately</span><span class="p">Public</span><span class="h">Hidden</span><span class="h">Hidden</span></div>
+        <div class="tr"><span>Deposit into the Ring</span><span class="p">Public</span><span class="p">Public</span><span class="p">Public</span></div>
+        <div class="tr"><span>Withdraw to a wallet</span><span class="p">Public</span><span class="p">Public</span><span class="p">Public</span></div>
+        <div class="tr"><span>Buy on a public market</span><span class="p">Public</span><span class="p">Public</span><span class="p">Public</span></div>
+      </div>
+      <p class="note rv">Wallet addresses stay visible on today's Ring. When anonymous rings reach mainnet, this table changes.</p>
+    </div>
+  </section>
+
+  <section class="band" id="scan" data-cam="vaults">
+    <div class="wrap two">
+      <div>
+        <p class="eyebrow mono">05 / Scan</p>
+        <h2 class="pix">What does the chain know about you?</h2>
+        <p class="sub">Paste any Solana address. Everything below is read live and is public right now.</p>
+        <form class="scanbox" id="scanForm" autocomplete="off">
+          <input id="scanIn" class="mono" placeholder="Solana address" spellcheck="false" aria-label="Solana address">
+          <button class="btn gold" id="scanGo">Scan</button>
+        </form>
+        <button class="link mono" id="scanMine" type="button">Use my connected wallet</button>
+      </div>
+      <div class="scanout spot" id="scanOut" aria-live="polite">
+        <div class="ph mono">Nothing scanned yet.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="pin" id="how" data-cam="both" style="--h:300vh">
+    <div class="sticky">
+      <div class="wrap"><p class="eyebrow mono">06 / Four moves</p><h2 class="pix">How you trade the world in private.</h2></div>
+      <div class="track cards" id="howTrack">
+        <article class="hc spot"><b class="mono">1</b><h3>Make your private wallet</h3><p>One signature from your wallet derives it, right in this tab. Nothing secret leaves your browser.</p></article>
+        <article class="hc spot"><b class="mono">2</b><h3>Fund it</h3><p>Deposit SOL, USDC or a market token into the Ring. From then on the balance is a note only you can read.</p></article>
+        <article class="hc spot"><b class="mono">3</b><h3>Buy the world</h3><p>Stocks, gold, the euro, crypto, routed by Jupiter. Move what you buy into the Ring.</p></article>
+        <article class="hc spot"><b class="mono">4</b><h3>Send in private</h3><p>Pay any registered address. The chain sees two wallets, not what moved or how much.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="status" data-cam="end">
+    <div class="wrap">
+      <p class="eyebrow mono">07 / Live</p>
+      <h2 class="pix">Checked from this page, now.</h2>
+      <div class="sgrid" id="sgrid">
+        <div class="sc spot" data-k="ring"><span class="mono k">Privacy Rings program</span><b class="v mono">checking</b></div>
+        <div class="sc spot" data-k="registry"><span class="mono k">Address registry</span><b class="v mono">checking</b></div>
+        <div class="sc spot" data-k="tree"><span class="mono k">Default ring</span><b class="v mono">checking</b></div>
+        <div class="sc spot" data-k="slot"><span class="mono k">Solana slot</span><b class="v mono">checking</b></div>
+        <div class="sc spot" data-k="prices"><span class="mono k">Markets priced</span><b class="v mono">checking</b></div>
+        <div class="sc spot" data-k="relay"><span class="mono k">Private moves relay</span><b class="v mono">checking</b></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="faq" data-cam="end">
+    <div class="wrap faqsplit">
+      <div><p class="eyebrow mono">08 / FAQ</p><h2 class="pix">Straight answers.</h2></div>
+      <div class="faq">
+        <details><summary>Who holds my money?</summary><p>You do. Your private wallet is derived from a signature in your own browser, and every transaction is signed by your wallet. WRLD never sees a key.</p></details>
+        <details><summary>What does the chain still see?</summary><p>Wallet addresses, deposits, withdrawals and any swap on a public market. What sits in your private balance, and what you send from it and how much, is encrypted.</p></details>
+        <details><summary>Are the stocks real stocks?</summary><p>They are tokens on Solana issued by third parties that track the stock. Issuers can pause them, and they may not be offered where you live.</p></details>
+        <details><summary>Is WRLD part of Helius or Jupiter?</summary><p>No. WRLD is independent. It uses Solana Privacy Rings for private balances and Jupiter for routing.</p></details>
+        <details><summary>Is this advice?</summary><p>No. Markets move, tokens can go to zero, and new software has bugs. Use amounts you can afford to lose.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <section class="band end" id="go" data-cam="end">
+    <div class="wrap center">
+      <h2 class="pix huge">Trade worldwide markets privately.</h2>
+      <a class="btn gold lg" href="/app">Open app</a>
+    </div>
+  </section>
+</main>
+<script type="module" src="/assets/js/home.js?v=2"></script>
+</body>
+</html>

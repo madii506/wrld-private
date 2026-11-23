@@ -1,0 +1,21 @@
+{
+  "name": "wrld",
+  "version": "1.0.0",
+  "description": "Trade worldwide markets privately. Stocks, gold, currencies and crypto on Solana.",
+  "scripts": {
+    "build:assets": "sh build.sh",
+    "dev": "MOCK=1 node dev/server.cjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@heliuslabs/zolana": "^0.8.0-alpha",
+    "@solana/kit": "^8.6.0",
+    "three": "^0.170.0"
+  },
+  "private": true,
+  "devDependencies": {
+    "esbuild": "^0.28.2"
+  }
+}

@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>WRLD · app</title>
+<meta name="description" content="Trade worldwide markets privately.">
+<meta name="theme-color" content="#05070d">
+<meta property="og:image" content="/assets/img/og.png">
+<link rel="icon" href="/assets/img/icon-64.png">
+<link rel="stylesheet" href="/assets/css/base.css?v=2">
+<link rel="stylesheet" href="/assets/css/app.css?v=2">
+</head>
+<body>
+<div id="wipe" aria-hidden="true"></div>
+<canvas id="trail" aria-hidden="true"></canvas>
+<div class="sky" aria-hidden="true"></div>
+<header class="bar">
+  <a class="brand pix" href="/?in"><img src="/assets/img/icon-64.png" alt="" width="24" height="24">WRLD</a>
+  <nav class="tabs" role="tablist">
+    <button role="tab" type="button" data-tab="markets" class="on">Markets</button><button role="tab" type="button" data-tab="private">Private</button><button role="tab" type="button" data-tab="scan">Scan</button><button role="tab" type="button" data-tab="live">Live</button>
+  </nav>
+  <div class="menuwrap">
+    <button class="chip" id="conn" aria-haspopup="true"><i class="dot"></i><span>Connect</span></button>
+    <div class="wmenu right" id="connMenu" role="menu"></div>
+  </div>
+</header>
+
+<main class="panes">
+  <!-- markets -->
+  <section class="pane on" data-pane="markets">
+    <div class="phead"><p class="eyebrow mono">Markets</p><h1 class="pix">Buy the world.</h1><p class="psub">Live prices from Jupiter. Your wallet signs every trade.</p></div>
+    <div class="mgrid">
+      <div class="mside"><div class="mfilt" id="mfilt"></div><div class="mlist" id="mlist"><div class="ph mono">Loading markets…</div></div></div>
+      <div class="trade spot" id="trade">
+        <div class="tside"><button class="on" type="button" data-side="buy">Buy</button><button type="button" data-side="sell">Sell</button></div>
+        <div class="tsel"><span class="mono k">Market</span><b class="pix" id="tSym">—</b><span class="mono" id="tPx"></span></div>
+        <label class="field"><span class="mono k" id="tPayL">Pay with</span>
+          <div class="row"><input id="tAmt" class="mono" inputmode="decimal" placeholder="0.00" aria-label="Amount"><div class="seg" id="tPay"><button class="on" type="button" data-pay="SOL">SOL</button><button type="button" data-pay="USDC">USDC</button></div></div>
+        </label>
+        <div class="quote mono" id="tQuote">Enter an amount for a live quote.</div>
+        <button class="btn gold wide" id="tGo" type="button">Connect a wallet to trade</button>
+        <p class="tnote" id="tNote">This swap is public, like any swap. Moving what you buy into your private balance hides it from then on.</p>
+        <div class="tres mono" id="tRes" aria-live="polite"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- private -->
+  <section class="pane" data-pane="private" id="private">
+    <div class="phead"><p class="eyebrow mono">Private</p><h1 class="pix">Your other side.</h1><p class="psub">Solana Privacy Rings on mainnet. Keys are derived and kept in this tab.</p></div>
+    <div class="pgrid">
+      <article class="card spot" id="pc1">
+        <b class="num mono">1</b><h3>Your private wallet</h3>
+        <p>One signature from your wallet derives it. The message is the standard Privacy Rings derivation message; it is not a transaction and costs nothing.</p>
+        <button class="btn gold" id="derive" type="button">Connect a wallet first</button>
+        <div class="addrbox mono" id="pAddr" hidden></div>
+      </article>
+      <article class="card spot" id="pc2">
+        <b class="num mono">2</b><h3>Publish it</h3>
+        <p>Senders find your private wallet through the onchain registry. Checked live for your wallet:</p>
+        <div class="stat mono" id="regState">—</div>
+        <button class="btn" id="register" type="button" disabled>Publish to the registry</button>
+        <p class="gate mono" data-relay>Opens once the private moves relay is set.</p>
+      </article>
+      <article class="card spot" id="pc3">
+        <b class="num mono">3</b><h3>Move in, send, take out</h3>
+        <p>Deposit SOL, USDC or a market token into the Ring. Send privately to any registered address. Withdraw to a public wallet whenever you want.</p>
+        <div class="ops"><button class="btn" type="button" disabled data-op="deposit">Move in</button><button class="btn" type="button" disabled data-op="send">Send privately</button><button class="btn" type="button" disabled data-op="withdraw">Take out</button></div>
+        <p class="gate mono" data-relay>Opens once the private moves relay is set.</p>
+      </article>
+    </div>
+    <p class="pmsg mono" id="pMsg" hidden aria-live="polite"></p>
+  </section>
+
+  <!-- scan -->
+  <section class="pane" data-pane="scan">
+    <div class="phead"><p class="eyebrow mono">Scan</p><h1 class="pix">What the chain knows.</h1><p class="psub">Read live from Solana. All of it is public right now.</p></div>
+    <form class="scanbox" id="scanForm" autocomplete="off"><input id="scanIn" class="mono" placeholder="Solana address" spellcheck="false" aria-label="Solana address"><button class="btn gold">Scan</button></form>
+    <button class="link mono" id="scanMine" type="button">Use my connected wallet</button>
+    <div class="scanout spot" id="scanOut" aria-live="polite"><div class="ph mono">Nothing scanned yet.</div></div>
+  </section>
+
+  <!-- live -->
+  <section class="pane" data-pane="live">
+    <div class="phead"><p class="eyebrow mono">Live</p><h1 class="pix">Checked now.</h1><p class="psub">Straight from Solana mainnet, refreshed every 20 seconds.</p></div>
+    <div class="sgrid" id="sgrid">
+      <div class="sc spot" data-k="ring"><span class="mono k">Privacy Rings program</span><b class="v mono">checking</b></div>
+      <div class="sc spot" data-k="registry"><span class="mono k">Address registry</span><b class="v mono">checking</b></div>
+      <div class="sc spot" data-k="tree"><span class="mono k">Default ring</span><b class="v mono">checking</b></div>
+      <div class="sc spot" data-k="slot"><span class="mono k">Solana slot</span><b class="v mono">checking</b></div>
+      <div class="sc spot" data-k="prices"><span class="mono k">Markets priced</span><b class="v mono">checking</b></div>
+      <div class="sc spot" data-k="relay"><span class="mono k">Private moves relay</span><b class="v mono">checking</b></div>
+    </div>
+  </section>
+</main>
+<script type="module" src="/assets/js/app.js?v=2"></script>
+</body>
+</html>
