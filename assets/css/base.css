@@ -2,6 +2,7 @@
 @font-face{font-family:Text;src:url(/assets/fonts/text.otf);font-display:swap}
 @font-face{font-family:Disp;src:url(/assets/fonts/disp.otf);font-display:swap}
 @font-face{font-family:Mono;src:url(/assets/fonts/mono.ttf);font-display:swap}
+@font-face{font-family:Name;src:url(/assets/fonts/name.ttf) format('truetype');font-weight:700;font-display:swap}
 :root{--bg:#05070d;--ink:#e9eef8;--mute:#8d97ad;--dim:#5b6478;--line:rgba(233,238,248,.09);--line2:rgba(233,238,248,.16);--gold:#f4b740;--gold2:#ffd680;--teal:#3ff0d8;--teal2:#9ff8ec;--panel:rgba(7,11,20,.78);--panel2:rgba(10,15,27,.9);--red:#ff6a5a;--green:#45e39a}
 *{box-sizing:border-box;scrollbar-width:none}
 *::-webkit-scrollbar{display:none}
@@ -9,6 +10,7 @@ html{overflow-x:hidden;background:var(--bg)}
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 Text,system-ui,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:clip}
 .pix{font-family:Pix,monospace;font-weight:600;letter-spacing:.01em}
 .mono{font-family:Mono,ui-monospace,monospace}
+.name{font-family:Name,Disp,sans-serif;font-weight:700}
 a{color:inherit}
 button{font:inherit;color:inherit;cursor:pointer}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:0 22px;border-radius:12px;border:1px solid var(--line2);background:rgba(255,255,255,.04);font:600 15px Disp,Text,system-ui,sans-serif;letter-spacing:-.005em;text-decoration:none;transition:transform .18s,background .18s,border-color .18s,box-shadow .18s}
